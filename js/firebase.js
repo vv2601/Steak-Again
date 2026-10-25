@@ -192,6 +192,8 @@ const FirebaseProfile = (() => {
     }
   }
 
-  return { init };
+return {
+  init,
+  syncEquipped
+};
 })();
-
