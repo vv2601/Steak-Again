@@ -8,8 +8,6 @@ Free-to-play simulator using fictional **01O0coin** currency.
 ## Update 2.3
 Gem-Shop crates (TAGS / GRADIENTS), 5 new tags + 4 new gradients, Cases fake-common and rollback tip-over events (tease chance 80% -> 60%),
 Aviamasters rebalance (RTP about 97%) and visual upgrade, global rebrand (01O0coin, Wager).
-Installing over an existing repo: copy these files over it, then run `node tools/apply-update-2.3.js` (rebrand strings in the files not rewritten here, plus test expectations).
-Save keys (`steak_v2*`) and the save-signing salt are intentionally NOT renamed so existing saves keep working.
 
 ## Update 2.4
 Quests replaced (daily: 500 rounds / 10,000 profit / 1 h; weekly: 4,000 rounds / 100,000 profit / 5 rank-ups / 5 h; playtime quests are fed by the shared playtime counter), playtime moved to the homepage, new header layout,
