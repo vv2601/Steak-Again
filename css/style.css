@@ -187,3 +187,27 @@ img.bdg{
   transform: scale(1.35);
   transform-origin: center center;
 }
+/* ===== Update 2.4 ===== */
+/* header: [spacer] [name/tag/rank] [next rank] ... [balance][gems] (right). Nothing wraps inside a pill. */
+.acct{flex:1;min-width:0;display:flex;align-items:flex-end;justify-content:flex-start;gap:12px;flex-wrap:nowrap}
+.acct .hsp{flex:1 1 0}.acct .hr{flex:1 1 0;display:flex;justify-content:flex-end;align-items:flex-end;gap:10px}
+.acct .ac{flex:none}.acct .pl,.acct .ac small{white-space:nowrap}.acct .pl{min-width:0;padding:2px 14px}.acct .pl.big{min-width:170px}
+#hb-gems{min-width:70px}#hb-bal{min-width:110px}#hb-next .rk{white-space:nowrap}
+@media(max-width:1100px){.acct{flex-wrap:wrap;justify-content:center}.acct .hsp{display:none}.acct .hr{flex:none}}
+/* homepage playtime panel */
+.ptp{margin-top:16px}.ptp .inner{padding:10px 16px}.ptv{font-size:clamp(14px,1.6vw,20px);font-weight:700;text-align:center;overflow-wrap:anywhere}
+/* quests: longer names fit their cards */
+.qc{width:min(100%,230px)}.qn{font-size:17px;padding:12px 10px}.qp{font-size:11px}
+/* sidebar about:blank toggle */
+.sbcl{position:absolute;left:0;bottom:12px;font-size:15px}.sbcl.on{color:#4ade80}.sb{padding-bottom:64px}
+/* ranks: names/icons/cash never split across lines at 100% zoom (containers scale the type; very narrow containers may wrap) */
+.rk{white-space:nowrap}
+.dp.rkp,.dp.bigp,.dp.allr{container-type:inline-size}
+.rkp .rrow>div,.rtop>div{min-width:0}
+.rkp .rrow .rk{font-size:clamp(14px,6cqw,30px)}
+.rtop{flex-wrap:nowrap;gap:10px}.rtop .rk{font-size:clamp(13px,3cqw,34px)!important}.rtop .bdg{flex:none}.rtop .arw{flex:none}
+@container (max-width:560px){.rtop{flex-wrap:wrap}}
+.allr .ar{flex-wrap:nowrap}.allr .ar .rk{font-size:min(var(--f,22px),4.4cqw)}.allr .ar span{white-space:nowrap;flex:none}.allr .ar .bdg,.allr .ar .gic{flex:none}
+@container (max-width:420px){.allr .ar{flex-wrap:wrap}}
+.reqs .rqr{display:flex;flex-wrap:wrap;column-gap:8px;align-items:baseline}.reqs .rqn,.reqs .rqv{white-space:nowrap}
+@media(max-width:700px){.allr .rk{font-size:min(var(--f,22px),4.4cqw)!important}.rtop .rk{font-size:clamp(13px,3cqw,34px)!important}}
