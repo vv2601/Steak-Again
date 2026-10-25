@@ -1,20 +1,23 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>0-100</title><link rel="icon" type="image/x-icon" href="./img/icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;800;900&family=Playfair+Display:wght@600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css"></head><body>
-<aside id="sb" class="sb" aria-label="Main menu" hidden>
-<button id="sbt" class="sbi" aria-expanded="false" aria-controls="sbn" aria-label="Toggle menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span class="sbl">Menu</span></button>
-<div id="sbn" role="navigation" aria-label="Pages">
-<a class="sbi" href="#" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z" fill="currentColor"/></svg><span class="sbl">Home</span></a>
-<a class="sbi" href="#rankup" aria-label="Rank-Up"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="2,18 8,11 12,15 20,6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14,5 21,5 21,12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sbl">Rank-Up</span></a>
-<a class="sbi" href="#dailyspin" aria-label="Daily Spin"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.5"/></svg><span class="sbl">Daily Spin</span></a>
-<a class="sbi" href="#shop" aria-label="Gem-Shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l2-5h14l2 5v2H3zM4 12h16v8H4z" fill="currentColor"/><rect x="9" y="14" width="6" height="6" fill="#000000"/></svg><span class="sbl">Gem-Shop</span></a>
-<a class="sbi" href="#inventory" aria-label="Inventory"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="4.5" fill="currentColor"/><path d="M3 22c0-5 4-8 9-8s9 3 9 8z" fill="currentColor"/></svg><span class="sbl">Inventory</span></a>
-<a class="sbi" href="#quests" aria-label="Quests"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="7" fill="currentColor"/><path d="M8 15l-2 8 6-3 6 3-2-8z" fill="currentColor"/></svg><span class="sbl">Quests</span></a></div>
-<button id="cloak" type="button" class="sbi sbcl" aria-pressed="false" aria-label="Toggle about:blank URL display"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18" stroke="currentColor" stroke-width="2"/></svg><span class="sbl" id="cloakl">about:blank: Off</span></button></aside>
-<nav><div class="brand"><a class="logo" href="#">0-100</a><small>All currency is fictional and not real.</small></div>
-<div id="acct" class="acct" hidden><div class="hsp"></div><div class="ac"><button type="button" class="pl big" id="hb-user" aria-label="Account: click to change username"><span id="hb-un"></span><span id="hb-tag" class="tagline"></span><span id="hb-rank"></span></button></div>
-<div class="ac"><small>Next Rank:</small><div class="pl" id="hb-next"></div></div>
-<div class="hr"><div class="ac"><small>01O0coin Balance:</small><div class="pl" id="hb-bal"></div></div><div class="ac"><small>Gems:</small><div class="pl" id="hb-gems"></div></div></div></div>
-<div class="brandr"><span class="url">discord.gg/ezW5cKHH97</span><span class="url ver">Update 2.4</span></div></nav>
-<main id="app"></main><div id="toast"></div>
-<script src="js/loader.js"></script></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Free Online Algebraic Calculator</title><link rel="icon" type="image/x-icon" href="./img/icon.png">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:420px;margin:0 auto;padding:28px 16px 48px}h1{font-size:clamp(22px,5vw,30px);line-height:1.2;margin:0 0 6px;text-align:center}.sub{margin:0 0 18px;text-align:center;color:#555;font-size:14px}
+.calc{background:#f4f6f8;border:1px solid #d9dee3;border-radius:16px;padding:14px;box-shadow:0 4px 16px #0000000d}
+.scr{background:#fff;border:1px solid #d9dee3;border-radius:10px;padding:8px 12px;text-align:right;margin-bottom:12px;min-height:76px}
+.ex{color:#777;font-size:14px;min-height:20px;overflow:hidden;white-space:nowrap}.disp{font-size:32px;font-weight:600;overflow-x:auto;white-space:nowrap;line-height:1.3}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.keys button{font:inherit;font-size:19px;padding:13px 0;border:1px solid #cfd5db;border-radius:10px;background:#fff;color:#111;cursor:pointer}
+.keys button:hover{background:#eef2f6}.keys button:active{background:#e1e7ed}.keys button:focus-visible{outline:3px solid #2563eb;outline-offset:1px}
+.keys .op{background:#e8f0fe}.keys .fn{background:#f0f0f4;font-size:16px}.keys .eq{background:#2563eb;color:#fff;border-color:#2563eb;grid-column:span 2}.keys .eq:hover{background:#1d4ed8}
+.how{margin-top:26px;color:#333;font-size:15px}.how h2{font-size:18px;margin:0 0 6px}.how ul{margin:0;padding-left:20px}.how li{margin:3px 0}
+</style></head><body data-view="calc"><main class="wrap"><h1>Free Online Algebra and Trigonometry Calculator</h1><p class="sub">Add, subtract, multiply, divide, powers, roots and trig.</p>
+<section class="calc" aria-label="Calculator"><div class="scr"><div id="ex" class="ex"></div><div id="disp" class="disp" role="status" aria-live="polite">0</div></div>
+<div class="keys">
+<button class="fn" data-k="sin(">sin</button><button class="fn" data-k="cos(">cos</button><button class="fn" data-k="tan(">tan</button><button class="fn" id="mode" data-k="mode" title="Toggle degrees / radians">DEG</button>
+<button class="fn" data-k="sqrt(">√</button><button class="fn" data-k="^">xʸ</button><button class="fn" data-k="(">(</button><button class="fn" data-k=")">)</button>
+<button class="fn" data-k="C">C</button><button class="fn" data-k="bk" aria-label="Delete last character">⌫</button><button class="fn" data-k="pi">π</button><button class="op" data-k="/">÷</button>
+<button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="*">×</button>
+<button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="-">−</button>
+<button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="+">+</button>
+<button data-k="0">0</button><button data-k=".">.</button><button class="eq" data-k="=">=</button></div></section>
+<section class="how"><h2>How to use</h2><ul><li>Tap the buttons or type on your keyboard, then press <b>=</b> or Enter.</li><li>Use <b>( )</b> for grouping and <b>xʸ</b> for powers, e.g. <code>2^3</code> or <code>sin(30)</code>.</li><li>Trig functions use degrees; press <b>DEG</b> to switch to radians.</li><li><b>C</b> (or Esc) clears everything, <b>⌫</b> deletes the last character.</li></ul></section></main>
+<script src="js/toggle.js"></script><script src="js/calc.js"></script></body></html>
