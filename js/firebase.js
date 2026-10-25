@@ -209,6 +209,53 @@ const FirebaseProfile = (() => {
       Inv.owned(id);
   }
 
+  async function claimUsername(input) {
+    if (!user || !db || !firestore) {
+      throw new Error("Firebase profile isn't ready.");
+    }
+
+    const result = Username.validate(input);
+
+    if (!result.ok) {
+      throw new Error(result.reason);
+    }
+
+    const usernameKey = result.usernameKey;
+
+    const uidRef = firestore.doc(
+      db, "usernamesByUid", user.uid
+    );
+    const nameRef = firestore.doc(
+      db, "usernames", usernameKey
+    );
+
+    await firestore.runTransaction(db, async (transaction) => {
+      // Read both documents before writing either one.
+      const uidSnapshot = await transaction.get(uidRef);
+      const nameSnapshot = await transaction.get(nameRef);
+
+      if (uidSnapshot.exists()) {
+        throw new Error("This account already has a username.");
+      }
+
+      if (nameSnapshot.exists()) {
+        throw new Error("That username is already taken.");
+      }
+
+      transaction.set(nameRef, {
+        uid: user.uid,
+        username: usernameKey,
+        createdAt: firestore.serverTimestamp()
+      });
+
+      transaction.set(uidRef, {
+        usernameKey,
+        createdAt: firestore.serverTimestamp()
+      });
+    });
+
+    return { username: usernameKey };
+  }
   async function syncEquipped() {
     if (!profileRef || !firestore) {
       throw new Error("Firebase profile isn't ready.");
@@ -268,6 +315,7 @@ const FirebaseProfile = (() => {
 
   return {
     init,
-    syncEquipped
+    syncEquipped,
+    claimUsername
   };
 })();
