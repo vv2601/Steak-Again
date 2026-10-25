@@ -44,6 +44,12 @@ const FirebaseProfile = (() => {
 
       mountPanel(status);
       await loadProfile(status);
+
+      try {
+        await loadEquipped();
+      } catch (error) {
+        console.error("Cloud cosmetics load failed:", error);
+      }
     } catch (error) {
       console.error("Firebase profile setup failed:", error);
       status.textContent =
@@ -192,8 +198,76 @@ const FirebaseProfile = (() => {
     }
   }
 
-return {
-  init,
-  syncEquipped
-};
+  function validEquipped(id, type) {
+    if (id === null) return true;
+    if (typeof id !== "string") return false;
+
+    const cosmetic = Cos.by(id);
+
+    return !!cosmetic &&
+      cosmetic.type === type &&
+      Inv.owned(id);
+  }
+
+  async function syncEquipped() {
+    if (!profileRef || !firestore) {
+      throw new Error("Firebase profile isn't ready.");
+    }
+
+    const grad = Store.d.eq.grad ?? null;
+    const tag = Store.d.eq.tag ?? null;
+
+    if (
+      !validEquipped(grad, "grad") ||
+      !validEquipped(tag, "tag")
+    ) {
+      throw new Error("Equipped cosmetics failed validation.");
+    }
+
+    await firestore.setDoc(profileRef, {
+      equippedGrad: grad,
+      equippedTag: tag,
+      updatedAt: firestore.serverTimestamp()
+    }, { merge: true });
+  }
+
+  async function loadEquipped() {
+    if (!profileRef || !firestore) return;
+
+    const snapshot = await firestore.getDoc(profileRef);
+    if (!snapshot.exists()) return;
+
+    const data = snapshot.data();
+
+    if (
+      !Object.prototype.hasOwnProperty.call(data, "equippedGrad") ||
+      !Object.prototype.hasOwnProperty.call(data, "equippedTag")
+    ) {
+      return;
+    }
+
+    const grad = data.equippedGrad;
+    const tag = data.equippedTag;
+
+    if (
+      !validEquipped(grad, "grad") ||
+      !validEquipped(tag, "tag")
+    ) {
+      console.warn(
+        "Cloud cosmetics are invalid or not owned; keeping local equipment."
+      );
+      return;
+    }
+
+    const result = Inv.apply(tag, grad);
+
+    if (!result) {
+      console.warn("Could not apply cloud-equipped cosmetics.");
+    }
+  }
+
+  return {
+    init,
+    syncEquipped
+  };
 })();
