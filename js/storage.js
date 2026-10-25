@@ -1,7 +1,4 @@
-/* Persistent state (localStorage). Client-side only: a browser game can never be 100% tamper-proof (see SECURITY_AUDIT.md).
-   v2.25: saves are SIGNED (single atomic key "S2:<hash>:<json>"), a shadow ledger clamps any out-of-band increase of balance/gems,
-   unsigned 2.0 saves are migrated once with a sanity clamp, and lifetime Cases spins (cs) + purchase prices (paid) are stored. */
-const Store={key:'steak_v2',tpKey:'steak_v2_playtime',d:null,
+const Store={key:'0-100_v2.4',tpKey:'0-100_v2.4_playtime',d:null,
 armed:typeof document!=='undefined',          // integrity checks on in the browser (off in the node unit tests unless a test arms them)
 LEGACY_MIGRATION:true,                        // accept ONE unsigned 2.0 save (clamped). Set to false in a later update once players have migrated.
 tamper:0,notice:'',sh:{o:null,b:0,g:0},
