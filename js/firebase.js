@@ -312,6 +312,17 @@ const FirebaseProfile = (() => {
       console.warn("Could not apply cloud-equipped cosmetics.");
     }
   }
+ // Temporary debugging hook; remove after testing.
+  window.__testClaimUsername = async function (input) {
+    try {
+      const result = await claimUsername(input);
+      console.log("Username claim succeeded:", result);
+      return result;
+    } catch (error) {
+      console.error("Username claim failed:", error);
+      throw error;
+    }
+  };
 
   return {
     init,
