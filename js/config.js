@@ -27,9 +27,25 @@ RANKS:[
 {n:'Radiant III', g:['#ffd84d','#d9c9a3'],req:{c:420000,r:1750}, rw:{c:1500,g:16},ic:'feather'},
 {n:'Insane Demon I', g:['#ff7a45','#c2221a'],req:{c:500000,r:2000}, rw:{c:1750,g:18},ic:'demon'},
 {n:'Insane Demon II',g:['#ff7a45','#c2221a'],req:{c:530000,r:2000}, rw:{c:1750,g:18},ic:'demon'},
-{n:'Extreme Demon',  g:['#ff3b2e','#d11a12'],req:null,             rw:{c:2000,g:20},ic:'xdemon'}],
-// Cases animation speed by rank index (Silver=3, Amethyst=7, Radiant I=16). Highest matching tier wins. Animation only: never payouts or odds.
-SPIN_SPEED:[[16,2.5],[7,2],[3,1.5]],
+// v2.45 Rank Expansion 2. Icons: img/<file> (white placeholders until real art is dropped in with the same filename).
+{n:'Extreme Demon I',   g:['#ff3b2e','#d11a12'],req:{c:600000,r:1500}, rw:{c:2000,g:20},ic:'xdemon'},
+{n:'Extreme Demon II',  g:['#c0261c','#7a0f0a'],req:{c:630000,r:1500}, rw:{c:1500,g:20},ic:'xdemon'},
+{n:'Extreme Demon III', g:['#9c1a14','#d11a12'],req:{c:800000,r:1750}, rw:{c:1500,g:20},ic:'xdemon'},
+{n:'Impossible Demon I',  g:['#8e24aa','#e53935'],req:{c:850000,r:1750}, rw:{c:2000,g:22},ic:'impdemon'},
+{n:'Impossible Demon II', g:['#8e24aa','#e53935'],req:{c:900000,r:1750}, rw:{c:2000,g:22},ic:'impdemon'},
+{n:'Impossible Demon III',g:['#8e24aa','#e53935'],req:{c:950000,r:2000}, rw:{c:2000,g:22},ic:'impdemon'},
+{n:'Unreal I',   g:['#ffffff','#e9b8d8'],req:{c:1000000,r:2000}, rw:{c:2500,g:24},ic:'unreal'},
+{n:'Unreal II',  g:['#ffffff','#e9b8d8'],req:{c:2000000,r:2000}, rw:{c:2500,g:24},ic:'unreal'},
+{n:'Unreal III', g:['#ffffff','#e9b8d8'],req:{c:3000000,r:2500}, rw:{c:2500,g:24},ic:'unreal'},
+{n:'Division 5', g:['#b8962e','#555555'],req:{c:4000000,r:2500}, rw:{c:3000,g:26},ic:'div5'},
+{n:'Division 4', g:['#b8962e','#4a4a4a'],req:{c:5000000,r:3000}, rw:{c:3500,g:28},ic:'div4'},
+{n:'Division 3', g:['#b8860b','#3a3a3a'],req:{c:6000000,r:3000}, rw:{c:4000,g:30},ic:'div3'},
+{n:'Division 2', g:['#c8860b','#b01010'],req:{c:7000000,r:3000}, rw:{c:4500,g:32},ic:'div2'},
+{n:'Division 1', g:['#e69a1a','#a01010'],req:null,               rw:{c:5000,g:34},ic:'div1'}],
+// Animation speed by rank index. Highest matching tier wins; each [rankIndex,speed] is also what the Rank-Up page displays.
+// Animation only: never payouts or odds. Cases: Silver=3, Amethyst=7, Impossible Demon I=24. Aviamasters: Silver=3, Amethyst=7, Division 5=30, Division 1=34.
+SPIN_SPEED:[[24,2.5],[7,2],[3,1.5]],
+AVI_SPEED:[[34,2.75],[30,2.5],[7,2],[3,1.5]],
 CONV:{PLINKO:1000,CASES:3,FLIP:5,'DOUBLE OR NOTHING':5},   // raw rounds per 1 qualified mini-game round (others 1)
 GAP_MS:{PLINKO:400},                        // minimum delay between wagers (enforced in Econ.cool, shared across tabs)
 LOCK_TTL_MS:15000,                          // a cross-tab bet lock with no heartbeat for this long is stale and can be taken over

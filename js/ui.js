@@ -1,6 +1,8 @@
 /* Shared UI: rank badges, gem icon, account bar + sidebar (Shell), modals, daily wheel, homepage dashboard, Rank-Up and Daily Spin pages. */
 let _bid=0;const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const gemIcon=(sz=18)=>`<svg class="gic" viewBox="0 0 24 24" width="${sz}" height="${sz}" aria-hidden="true"><polygon points="12,2 21,9 12,22 3,9" fill="#d58cff" stroke="#8b3dd6" stroke-width="1.5" stroke-linejoin="round"/><path d="M3 9h18M8 9l4-7 4 7-4 13z" fill="none" stroke="#f3d6ff" stroke-width="1" opacity=".8"/></svg>`;
+/* rank icon id (CFG.RANKS[i].ic) -> image file in img/. v2.45 art (jpg) ships as white placeholders: replace the files, keep the names. */
+const BIMG={demon:'insanedemon.png',xdemon:'extremedemon.png',impdemon:'impossibledemon.jpg',unreal:'unreal.jpg',div5:'div5.jpg',div4:'div4.jpg',div3:'div3.jpg',div2:'div2.jpg',div1:'div1.jpg'};
 const Badge={
 grad:i=>`linear-gradient(135deg,${CFG.RANKS[i].g[0]},${CFG.RANKS[i].g[1]})`,
 txt:(i,st='')=>`<b class="rk" style="background-image:${Badge.grad(i)};${st}">${CFG.RANKS[i].n.toUpperCase()}</b>`,
@@ -8,7 +10,7 @@ svg(i,sz=56){const id='bd'+(++_bid),[a,b]=CFG.RANKS[i].g,P=p=>`<polygon points="
 const star=(n,ro,ri)=>{const o=[];for(let k=0;k<n*2;k++){const r=k%2?ri:ro,t=Math.PI*k/n-Math.PI/2;o.push((50+r*Math.cos(t)).toFixed(1)+','+(50+r*Math.sin(t)).toFixed(1))}return o.join(' ')};
 const S=[`<circle cx="50" cy="50" r="38" fill="none" stroke="url(#${id})" stroke-width="10"/>`,P('8,14 92,14 50,90'),P('50,5 90,27 90,73 50,95 10,73 10,27'),`<rect x="14" y="14" width="72" height="72" rx="12" fill="url(#${id})" stroke="${b}" stroke-width="3"/>`,P(star(4,46,14)),P('50,6 94,38 77,90 23,90 6,38'),P('30,6 70,6 94,30 94,70 70,94 30,94 6,70 6,30'),`<circle cx="50" cy="50" r="42" fill="url(#${id})" stroke="${b}" stroke-width="4"/>`,P('25,12 75,12 96,38 50,92 4,38'),P(star(12,48,36)),`<polyline points="14,54 40,80 88,22" fill="none" stroke="url(#${id})" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`];
 const ic=CFG.RANKS[i].ic;
-if(ic==='demon'||ic==='xdemon')return `<img class="bdg" src="img/${ic==='demon'?'insanedemon':'extremedemon'}.png" width="${sz}" height="${sz}" alt="" aria-hidden="true">`;
+if(BIMG[ic])return `<img class="bdg" src="img/${BIMG[ic]}" width="${sz}" height="${sz}" alt="" aria-hidden="true">`;
 const X={crown:P('8,78 14,28 34,50 50,18 66,50 86,28 92,78'),feather:`<path d="M80,8C42,10 18,38 20,78L12,94 28,86C62,84 86,52 80,8Z" fill="url(#${id})" stroke="${b}" stroke-width="3" stroke-linejoin="round"/><path d="M80,8 22,84" stroke="${b}" stroke-width="3" fill="none"/>`};
 return `<svg class="bdg" viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>${ic==='check'?S[10]:X[ic]||S[i]}</svg>`}};
 const hms=ms=>{const s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return [h,m,s%60].map(x=>String(x).padStart(2,'0')).join(':')};
@@ -18,16 +20,6 @@ const fdur=ms=>{const s=Math.floor(ms/1000),p=[[Math.floor(s/3600),'h'],[Math.fl
 const plural=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
 const playtimeTxt=ms=>{let s=Math.floor(ms/1000);const w=Math.floor(s/604800);s%=604800;const d=Math.floor(s/86400);s%=86400;const h=Math.floor(s/3600);s%=3600;const m=Math.floor(s/60);
 return `${plural(w,'Week')}, ${plural(d,'Day')}, ${plural(h,'Hour')}, ${plural(m,'Minute')} and ${plural(s%60,'Second')}`};
-/* v2.4 about:blank mode: the game runs inside an about:blank tab (opened from the sidebar button), so the address bar shows about:blank until it is turned off.
-   The flag is remembered (localStorage). Turning it off from inside the cloaked tab closes that tab. */
-const Cloak={key:'steak_cloak',
-on(){try{return localStorage.getItem(Cloak.key)==='1'}catch(e){return false}},
-framed(){try{return window.top!==window.self}catch(e){return true}},
-open(){const w=window.open('about:blank','_blank');if(!w){App.toast('Allow pop-ups to use about:blank mode');return false}
-try{const d=w.document,f=d.createElement('iframe');d.title='about:blank';d.body.style.cssText='margin:0;height:100%;background:#000';d.documentElement.style.height='100%';f.src=location.href;f.style.cssText='border:0;width:100%;height:100%;display:block';d.body.appendChild(f)}catch(e){try{w.close()}catch(x){}return false}return true},
-toggle(){if(Cloak.on()){try{localStorage.removeItem(Cloak.key)}catch(e){}Cloak.paint();App.toast('about:blank mode off');if(Cloak.framed()){try{window.top.close()}catch(e){}}return}
-if(!Cloak.framed()&&!Cloak.open())return;try{localStorage.setItem(Cloak.key,'1')}catch(e){}Cloak.paint();App.toast('about:blank mode on')},
-paint(){const b=$('cloak'),l=$('cloakl');if(!b)return;const o=Cloak.on();b.setAttribute('aria-pressed',String(o));l.textContent='about:blank: '+(o?'On':'Off');b.classList.toggle('on',o)}};
 const Shell={
 show(v){$('acct').hidden=!v;$('sb').hidden=!v},
 update(){if(!$('hb-bal'))return;const s=Rank.status(),d=Store.d;$('hb-bal').textContent='$'+Econ.fmt(d.balance);$('hb-gems').innerHTML=gemIcon(15)+' '+d.gems;
@@ -46,7 +38,6 @@ sb.addEventListener('click',e=>{if(e.target.closest('a'))set(false)});document.a
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sb.classList.contains('open')){set(false);t.focus()}});
 $('hb-user').onclick=()=>{const m=Modal.open(`<p class="rdisc">Change username</p><input id="nun" maxlength="16" value="${esc(Store.d.user)}" aria-label="Username"><div class="mbtns"><button class="btn" id="nys">Save</button><button class="btn dim" id="nno">Cancel</button></div>`,{label:'Change username',esc:()=>m.close()});
 $('nno').onclick=()=>m.close();$('nys').onclick=()=>{if(App.setUser($('nun').value)){m.close();Shell.update();App.toast('Username saved')}else App.toast('Type a username first')}};
-$('cloak').onclick=Cloak.toggle;Cloak.paint();if(typeof addEventListener==='function')addEventListener('storage',e=>{if(e.key===Cloak.key)Cloak.paint()});
 setInterval(Shell.tick,1000);Shell.tick()}};
 const Modal={seen:false,
 open(html,{label='Dialog',esc:onEsc,wide}={}){const o=document.createElement('div');o.className='mo';o.innerHTML=`<div class="mb${wide?' wide':''}" role="dialog" aria-modal="true" aria-label="${label}">${html}</div>`;document.body.appendChild(o);$('app').setAttribute('aria-hidden','true');requestAnimationFrame(()=>o.classList.add('in'));
@@ -109,15 +100,19 @@ $('rs').onclick=ask;
 const qsig=()=>['d','w'].map(sc=>Quests.list(sc).map(q=>Quests.prog(sc,q)+':'+Quests.claimed(sc,q)).join()).join('|');let sg=qsig();
 Pages._tick=()=>{Quests.sync();const n=qsig();if(n!==sg){sg=n;const a=$('qd-in'),b=$('qw-in');if(a)a.innerHTML=Dash.questBars('d');if(b)b.innerHTML=Dash.questBars('w')}};   // live quest progress (playtime quests move while you sit on the homepage)
 Shell.tick();Modal.disclaimer();return()=>{Pages._tick=null;w.destroy()}}};
+/* v2.45: reward text is built from the same data that grants it: starting cash + any speed tier that STARTS at this rank (CFG.SPIN_SPEED / CFG.AVI_SPEED) + Gems. */
+const rwTxt=i=>{const r=CFG.RANKS[i].rw,sp=[['Cases',CFG.SPIN_SPEED],['Aviamasters',CFG.AVI_SPEED]].map(([n,t])=>{const x=t.find(a=>a[0]===i);return x?` + ${x[1]}x ${n} Speed`:''}).join('');return `$${Econ.fi(r.c)}${sp} + ${r.g}`};
 Pages.rankup={mount(app){const s=Rank.status(),R=CFG.RANKS;
 const reqs=(a,b)=>R.slice(a,b).map((r,k)=>`<div class="rqr"><span class="rqn">${Badge.txt(a+k)} → ${Badge.txt(a+k+1)}</span><span class="rqv">$${Econ.fi(r.req.c)} and ${r.req.r} minigames played</span></div>`).join('');
-const allr=(a,b)=>R.slice(a,b).map((r,k)=>{const i=a+k;return `<div class="ar${i===s.idx?' cur':''}">${Badge.txt(i,`--f:${22+Math.min(i,10)*3}px`)}${Badge.svg(i,26+Math.min(i,10)*2)}<span>$${Econ.fi(r.rw.c)} + ${r.rw.g}</span>${gemIcon(22)}</div>`}).join('');
-app.innerHTML=`<div class="rpn" role="tablist" aria-label="Rank pages"><button class="rpb on" role="tab" aria-selected="true" data-p="0">Page 1</button><button class="rpb" role="tab" aria-selected="false" data-p="1">Page 2</button></div><div class="rpv"><div class="rpt"><section class="rpp" aria-label="Ranks, page 1"><div class="rpg"><div><h2 class="sec">🎖️ Rank Status ›</h2><div class="dp bigp"><div class="rtop"><div><small>Current Rank:</small><div>${Badge.txt(s.idx)}</div></div>${Badge.svg(s.idx,64)}${s.next?`<span class="arw">➜</span>${Badge.svg(s.idx+1,64)}`:''}<div class="tr"><small>Next Rank:</small><div>${s.next?Badge.txt(s.idx+1):'<b class="rk" style="background-image:'+Badge.grad(CFG.RANKS.length-1)+'">MAX RANK</b>'}</div></div></div>
-${s.max?'<p class="rq">You reached the maximum rank: ${R[R.length-1].n}.</p>':`<p class="rq">RANK-UP REQUIREMENTS:<br>$${Econ.fi(s.req.c)} and ${s.req.r} minigames played.</p>${Dash.rankBars(s)}<p class="mline">Reward for ${R[s.idx+1].n}: <b>$${Econ.fi(R[s.idx+1].rw.c)}</b> starting  + <b>${R[s.idx+1].rw.g}</b> ${gemIcon(14)} Gems</p>`}
+const allr=(a,b)=>R.slice(a,b).map((r,k)=>{const i=a+k,t=rwTxt(i);return `<div class="ar${i===s.idx?' cur':''}">${Badge.txt(i,`--f:${22+Math.min(i,10)*3}px`)}${Badge.svg(i,26+Math.min(i,10)*2)}<span${t.length>26?' class="sm"':''}>${t}</span>${gemIcon(22)}</div>`}).join('');
+/* pages 2 and 3 share one layout: All Ranks (rank a..b-1) + Rank-Up Requirements (rank ra..rb-1 -> next) */
+const side=(a,b,ra,rb,foot,n)=>`<section class="rpp" aria-label="Ranks, page ${n}" inert aria-hidden="true"><div class="rpg"><div><h2 class="sec">🎖️ All Ranks ›</h2><div class="dp allr"><p>Rewards and starting cash for each rank:</p>${allr(a,b)}${foot}</div></div><div><h2 class="sec">🎖️ Rank-Up Requirements ›</h2><div class="dp reqs">${reqs(ra,rb)}</div></div></div></section>`;
+app.innerHTML=`<div class="rpn" role="tablist" aria-label="Rank pages"><button class="rpb on" role="tab" aria-selected="true" data-p="0">Page 1</button><button class="rpb" role="tab" aria-selected="false" data-p="1">Page 2</button><button class="rpb" role="tab" aria-selected="false" data-p="2">Page 3</button></div><div class="rpv"><div class="rpt"><section class="rpp" aria-label="Ranks, page 1"><div class="rpg"><div><h2 class="sec">🎖️ Rank Status ›</h2><div class="dp bigp"><div class="rtop"><div><small>Current Rank:</small><div>${Badge.txt(s.idx)}</div></div>${Badge.svg(s.idx,64)}${s.next?`<span class="arw">➜</span>${Badge.svg(s.idx+1,64)}`:''}<div class="tr"><small>Next Rank:</small><div>${s.next?Badge.txt(s.idx+1):'<b class="rk" style="background-image:'+Badge.grad(CFG.RANKS.length-1)+'">MAX RANK</b>'}</div></div></div>
+${s.max?`<p class="rq">You reached the maximum rank: ${R[R.length-1].n}.</p>`:`<p class="rq">RANK-UP REQUIREMENTS:<br>$${Econ.fi(s.req.c)} and ${s.req.r} minigames played.</p>${Dash.rankBars(s)}<p class="mline">Reward for ${R[s.idx+1].n}: <b>${rwTxt(s.idx+1)}</b> ${gemIcon(14)} Gems</p>`}
 <button class="rubtn big" id="rub" ${s.ready?'':'disabled'}>${s.max?'MAX RANK':'RANK-UP'}</button>
 <p class="warn">Warning: Ranking up <u>resets</u> <span class="red">all</span> of your coins (to the new rank's starting cash) and your rank progress. Lifetime stats and owned cosmetics are kept.</p></div>
 <h2 class="sec">🎖️ Rank-up Requirements ›</h2><div class="dp reqs">${reqs(0,10)}</div></div>
-<div><h2 class="sec">🎖️ All Ranks ›</h2><div class="dp allr"><p>Rewards and starting cash for each rank:</p>${allr(1,11)}<p class="spendg">Spend your gems ${gemIcon(20)} on player tags and name gradients:</p><a class="gembtn" href="#shop">VISIT GEMSHOP</a></div></div></div></section><section class="rpp" aria-label="Ranks, page 2" inert aria-hidden="true"><div class="rpg"><div><h2 class="sec">🎖️ All Ranks ›</h2><div class="dp allr"><p>Rewards and starting cash for each rank:</p>${allr(11,R.length)}<p class="spendg">More ranks soon in Rank Expansion 2.</p></div></div><div><h2 class="sec">🎖️ Rank-Up Requirements ›</h2><div class="dp reqs">${reqs(10,R.length-1)}</div></div></div></section></div></div>`;
+<div><h2 class="sec">🎖️ All Ranks ›</h2><div class="dp allr"><p>Rewards and starting cash for each rank:</p>${allr(1,11)}<p class="spendg">Spend your gems ${gemIcon(20)} on player tags and name gradients:</p><a class="gembtn" href="#shop">VISIT GEMSHOP</a></div></div></div></section>${side(11,22,10,21,'',2)}${side(22,R.length,21,R.length-1,'<p class="spendg">More ranks soon in Rank Expansion 3.</p>',3)}</div></div>`;
 const pg=[...app.querySelectorAll('.rpp')],bt=[...app.querySelectorAll('.rpb')],tr=app.querySelector('.rpt');
 bt.forEach(b=>b.onclick=()=>{const n=+b.dataset.p;tr.style.transform=`translateX(${-100*n}%)`;bt.forEach((x,i)=>{x.classList.toggle('on',i===n);x.setAttribute('aria-selected',String(i===n))});pg.forEach((x,i)=>{x.toggleAttribute('inert',i!==n);x.setAttribute('aria-hidden',String(i!==n))})});
 $('rub').onclick=Modal.rankUp;Shell.tick()}};
