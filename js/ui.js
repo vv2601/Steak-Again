@@ -36,7 +36,6 @@ init(){const sb=$('sb'),t=$('sbt'),set=o=>{sb.classList.toggle('open',o);t.setAt
 t.onclick=e=>{e.stopPropagation();set(!sb.classList.contains('open'))};
 sb.addEventListener('click',e=>{if(e.target.closest('a'))set(false)});document.addEventListener('click',e=>{if(!sb.contains(e.target))set(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sb.classList.contains('open')){set(false);t.focus()}});
-
 $('hb-user').onclick=()=>{
   const m=Modal.open(`
     <p class="rdisc">Account settings</p>
@@ -78,7 +77,6 @@ $('hb-user').onclick=()=>{
     }
   };
 };
-
 setInterval(Shell.tick,1000);Shell.tick()}};
 const Modal={seen:false,
 open(html,{label='Dialog',esc:onEsc,wide}={}){const o=document.createElement('div');o.className='mo';o.innerHTML=`<div class="mb${wide?' wide':''}" role="dialog" aria-modal="true" aria-label="${label}">${html}</div>`;document.body.appendChild(o);$('app').setAttribute('aria-hidden','true');requestAnimationFrame(()=>o.classList.add('in'));
