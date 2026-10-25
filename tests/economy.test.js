@@ -68,15 +68,21 @@ fresh();Store.d.inv=['t_larper','g_gem','t_grief'];t('equip requires ownership',
 const before=Store.d.balance,s1=Inv.sell('t_grief'),s2=Inv.sell('t_grief');t('sell Legendary (5 gems) = $250, once; no gems; no rank money/profit',s1.ok&&s1.amt===250&&!s2.ok&&Store.d.balance===before+250&&Store.d.gems===0&&Store.d.rc===0&&Store.d.q.d.p.profit===0);
 Inv.sell('g_gem');t('selling an equipped item unequips it',Store.d.eq.grad===null&&Store.d.eq.tag==='t_larper');t('sale values = gem value x 50 (1:50, 2:100, 3:150, 5:250)',[1,2,3,5].every((g,i)=>Cos.sellValue({rar:['common','rare','epic','legendary'][i]})===g*50));
 // ---- quests
-fresh();const q=()=>Store.d.q;for(let i=0;i<99;i++)Econ.settle('MINES',1,1);t('99 rounds: daily rounds quest not complete',!Quests.done('d',CFG.QUEST.daily[0])&&!toasts.length);Econ.settle('MINES',1,1);
-t('100th round completes quest + sends the exact notification',Quests.done('d',CFG.QUEST.daily[0])&&toasts.includes('Quest completed! Claim reward at Quests page.'));
-const gb=Store.d.gems,c1=Quests.claim('d','d_rounds'),c2=Quests.claim('d','d_rounds');t('claim awards 2 Gems once; second claim refused',c1===2&&c2===null&&Store.d.gems===gb+2);
-fresh();Econ.settle('MINES',100,150);Econ.settle('MINES',100,0);t('profit quest uses net profit only (50), not gross payouts',Quests.prog('d',CFG.QUEST.daily[1])===50);
-fresh();Econ.settle('MINES',500,1000);t('$500 profit completes the daily profit quest (1 Gem)',Quests.done('d',CFG.QUEST.daily[1])&&Quests.claim('d','d_profit')===1);
-fresh();Store.d.gems=9;Gems.convert(1);Inv.sell;Store.d.inv=['t_larper'];Inv.sell('t_larper');t('conversions/sales never advance quests',Store.d.q.d.p.profit===0&&Store.d.q.w.p.profit===0);
-fresh();Store.d.rc=2500;Store.d.rq=50;Rank.rankUp();t('weekly "Rank up once" completes only after a real rank-up',Quests.done('w',CFG.QUEST.weekly[2]));Quests.claim('w','w_rank');t('weekly rank quest pays 1 Gem',Store.d.gems===CFG.RANKS[1].rw.g+1);
+const D=CFG.QUEST.daily,WQ=CFG.QUEST.weekly;fresh();for(let i=0;i<499;i++)Econ.settle('MINES',1,1);t('499 rounds: daily rounds quest not complete',!Quests.done('d',D[0])&&!toasts.length);Econ.settle('MINES',1,1);
+t('500th round completes quest + sends the exact notification',Quests.done('d',D[0])&&toasts.includes('Quest completed! Claim reward at Quests page.'));
+const gb=Store.d.gems,c1=Quests.claim('d','d_r500'),c2=Quests.claim('d','d_r500');t('claim awards 2 Gems once; second claim refused',c1===2&&c2===null&&Store.d.gems===gb+2);
+fresh();Econ.settle('MINES',100,150);Econ.settle('MINES',100,0);t('profit quest uses net profit only (50), not gross payouts',Quests.prog('d',D[1])===50);
+fresh();Econ.settle('MINES',10000,20000);t('10,000 profit completes the daily profit quest (3 Gems)',Quests.done('d',D[1])&&Quests.claim('d','d_p10k')===3);
+fresh();Store.d.gems=9;Gems.convert(1);Store.d.inv=['t_larper'];Inv.sell('t_larper');t('conversions/sales never advance quests',Store.d.q.d.p.profit===0&&Store.d.q.w.p.profit===0);
+fresh();for(let i=0;i<5;i++){Store.d.rc=R[Store.d.rk].req.c;Store.d.rq=R[Store.d.rk].req.r;Rank.rankUp()}t('weekly "Rank up 5 times" completes only after 5 real rank-ups',Quests.done('w',WQ[2])&&Quests.prog('w',WQ[2])===5);const g0=Store.d.gems;Quests.claim('w','w_rk5');t('weekly rank quest pays 2 Gems',Store.d.gems===g0+2);
+fresh();Store.d.rc=2500;Store.d.rq=50;Rank.rankUp();t('one rank-up does not complete the 5x quest',!Quests.done('w',WQ[2])&&Quests.prog('w',WQ[2])===1);
+// playtime quests: fed once per counted second by the shared playtime counter
+fresh();Store.d.user='t';Store.qt=0;localStorage.setItem(Store.tpKey,JSON.stringify({t:0,l:1000}));let tn=1000;for(let i=0;i<1440;i++){tn+=2500;Store.tickPlaytime(tn)}Store.questTime(0,true);
+t('~1h of ticks completes the daily playtime quest but not the weekly 5h one',Quests.prog('d',D[2])===D[2].target&&Quests.done('d',D[2])&&Quests.prog('w',WQ[3])===Quests.prog('d',D[2]));
+{const b=Quests.prog('w',WQ[3]);Store.tickPlaytime(tn+100);Store.questTime(0,true);t('a tick <0.9 s after the last one adds no quest time (no double count)',Quests.prog('w',WQ[3])===b)}
+fresh();Quests.claim('d','d_t1h');t('unfinished playtime quest cannot be claimed',Quests.claim('d','d_t1h')===null);
 fresh();Econ.settle('MINES',1,1);const base=Date.now();Quests.sync(base+25*3600e3);t('daily quests reset after 24h; weekly persist',Store.d.q.d.p.rounds===0&&Store.d.q.w.p.rounds===1);Quests.sync(base+8*86400e3);t('weekly quests reset after 7 days',Store.d.q.w.p.rounds===0);
-t('quest definitions match spec (100/500/2/1 gems; 250/2500/rank 3/2/1)',CFG.QUEST.daily.map(x=>x.target+':'+x.gems).join()==='100:2,500:1'&&CFG.QUEST.weekly.map(x=>x.target+':'+x.gems).join()==='250:3,2500:2,1:1');
+t('quest definitions match spec (v2.4)',CFG.QUEST.daily.map(x=>x.kind+':'+x.target+':'+x.gems).join()==='rounds:500:2,profit:10000:3,time:3600000:2'&&CFG.QUEST.weekly.map(x=>x.kind+':'+x.target+':'+x.gems).join()==='rounds:4000:3,profit:100000:2,rank:5:2,time:18000000:2');
 // ---- Guess the Cup
 const cu={0:0,1:0,2:0};for(let i=0;i<300000;i++)cu[Games.guessthecup.pick()]++;t('each cup has a 1-in-3 chance',[0,1,2].every(i=>Math.abs(cu[i]/300000-1/3)<.006));
 fresh();Store.d.balance-=10;const cp=Econ.settle('GUESS THE CUP',10,10*CUP_WIN_MULT);t('correct guess pays 2.5x TOTAL (stake included): bet 10 -> 25',CUP_WIN_MULT===2.5&&cp===25);t('theoretical return = 83.33%',Math.abs(CUP_WIN_MULT/3-.8333)<.001);

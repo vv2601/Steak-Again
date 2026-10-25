@@ -20,7 +20,7 @@ fresh();Store.d.rc=2500;Store.d.rq=50;Rank.rankUp();Store.check();t('rank-up cre
 Store.d.dr={id:'low',amount:400};Store.d.dc=false;Daily.credit();Store.d.dr={id:'gem',amount:3};Store.d.dc=false;Daily.credit();Store.check();t('daily Steakcoin + Gem rewards not flagged',Store.tamper===0&&Store.d.gems===4);
 Gems.convert(2);Store.check();t('gem conversion not flagged',Store.tamper===0);
 Econ.resetBalance();Econ.addCoins(5);Store.check();t('reset / addCoins not flagged',Store.tamper===0);
-for(let i=0;i<100;i++)Econ.settle('MINES',1,1);Quests.claim('d','d_rounds');Store.check();t('quest gem claim not flagged',Store.tamper===0);
+for(let i=0;i<500;i++)Econ.settle('MINES',1,1);Quests.claim('d','d_r500');Store.check();t('quest gem claim not flagged',Store.tamper===0);
 // ---- signed saves
 fresh();Store.d.balance=77;Store.d.gems=0;Store.sync();Store.save();const raw=localStorage.getItem(Store.key);t('save is signed',raw.startsWith('S2:'));realLoad();t('signed save round-trips',Store.d.balance===77&&Store.tamper===0);
 localStorage.setItem(Store.key,raw.replace('"balance":77','"balance":9999999'));realLoad();t('edited signed save is rejected and reset',Store.d.balance===CFG.UNRANKED_START&&Store.tamper===1&&/integrity/.test(Store.notice));
