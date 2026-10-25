@@ -1,4 +1,3 @@
-
 /* Firebase profile sync for 01O0.
    Loaded by the private loader; intentionally uses dynamic imports. */
 const FirebaseProfile = (() => {
