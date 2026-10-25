@@ -2,6 +2,7 @@
 /* Firebase profile sync for 01O0.
    Loaded by the private loader; intentionally uses dynamic imports. */
 const FirebaseProfile = (() => {
+   window.__firebaseModuleLoaded = true;
   const firebaseConfig = {
     apiKey: "AIzaSyCqWmZU7nap7dqYTRfJTExjaQjXHuYMDUg",
     authDomain: "zero-to-a-hundred.firebaseapp.com",
