@@ -36,8 +36,49 @@ init(){const sb=$('sb'),t=$('sbt'),set=o=>{sb.classList.toggle('open',o);t.setAt
 t.onclick=e=>{e.stopPropagation();set(!sb.classList.contains('open'))};
 sb.addEventListener('click',e=>{if(e.target.closest('a'))set(false)});document.addEventListener('click',e=>{if(!sb.contains(e.target))set(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sb.classList.contains('open')){set(false);t.focus()}});
-$('hb-user').onclick=()=>{const m=Modal.open(`<p class="rdisc">Change username</p><input id="nun" maxlength="16" value="${esc(Store.d.user)}" aria-label="Username"><div class="mbtns"><button class="btn" id="nys">Save</button><button class="btn dim" id="nno">Cancel</button></div>`,{label:'Change username',esc:()=>m.close()});
-$('nno').onclick=()=>m.close();$('nys').onclick=()=>{if(App.setUser($('nun').value)){m.close();Shell.update();App.toast('Username saved')}else App.toast('Type a username first')}};
+
+$('hb-user').onclick=()=>{
+  const m=Modal.open(`
+    <p class="rdisc">Account settings</p>
+    <label for="nun">Game username</label>
+    <input id="nun" maxlength="16"
+      value="${esc(Store.d.user)}" aria-label="Username">
+    <div class="mbtns">
+      <button class="btn" id="nys">Save username</button>
+      <button class="btn dim" id="nno">Cancel</button>
+    </div>
+    <hr>
+    <p>Sync your profile preferences with Firebase.</p>
+    <button class="btn" id="openCloudProfile">
+      Cloud profile settings
+    </button>
+  `,{label:'Account settings',esc:()=>m.close()});
+
+  $('nno').onclick=()=>m.close();
+
+  $('nys').onclick=()=>{
+    if(App.setUser($('nun').value)){
+      m.close();
+      Shell.update();
+      App.toast('Username saved');
+    }else{
+      App.toast('Type a username first');
+    }
+  };
+
+  $('openCloudProfile').onclick=()=>{
+    m.close();
+    const panel=document.getElementById('firebase-profile-panel');
+
+    if(panel){
+      panel.open=true;
+      panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }else{
+      App.toast('Firebase profile is not ready yet');
+    }
+  };
+};
+
 setInterval(Shell.tick,1000);Shell.tick()}};
 const Modal={seen:false,
 open(html,{label='Dialog',esc:onEsc,wide}={}){const o=document.createElement('div');o.className='mo';o.innerHTML=`<div class="mb${wide?' wide':''}" role="dialog" aria-modal="true" aria-label="${label}">${html}</div>`;document.body.appendChild(o);$('app').setAttribute('aria-hidden','true');requestAnimationFrame(()=>o.classList.add('in'));
