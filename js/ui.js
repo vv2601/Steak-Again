@@ -13,20 +13,32 @@ const X={crown:P('8,78 14,28 34,50 50,18 66,50 86,28 92,78'),feather:`<path d="M
 return `<svg class="bdg" viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>${ic==='check'?S[10]:X[ic]||S[i]}</svg>`}};
 const hms=ms=>{const s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return [h,m,s%60].map(x=>String(x).padStart(2,'0')).join(':')};
 const dhms=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return `${Math.floor(s/86400)}d, ${Math.floor(s%86400/3600)}h, ${Math.floor(s%3600/60)}m, ${s%60}s`};   // weekly quest reset format
+const hmsr=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return `${Math.floor(s/3600)}h, ${Math.floor(s%3600/60)}m, ${s%60}s`};   // daily quest reset format (weekly adds days)
+const fdur=ms=>{const s=Math.floor(ms/1000),p=[[Math.floor(s/3600),'h'],[Math.floor(s%3600/60),'m'],[s%60,'s']].filter(x=>x[0]);return p.length?p.map(x=>x[0]+x[1]).join(' '):'0s'};   // quest playtime progress, e.g. 12m 5s / 1h
 const plural=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
 const playtimeTxt=ms=>{let s=Math.floor(ms/1000);const w=Math.floor(s/604800);s%=604800;const d=Math.floor(s/86400);s%=86400;const h=Math.floor(s/3600);s%=3600;const m=Math.floor(s/60);
 return `${plural(w,'Week')}, ${plural(d,'Day')}, ${plural(h,'Hour')}, ${plural(m,'Minute')} and ${plural(s%60,'Second')}`};
+/* v2.4 about:blank mode: the game runs inside an about:blank tab (opened from the sidebar button), so the address bar shows about:blank until it is turned off.
+   The flag is remembered (localStorage). Turning it off from inside the cloaked tab closes that tab. */
+const Cloak={key:'steak_cloak',
+on(){try{return localStorage.getItem(Cloak.key)==='1'}catch(e){return false}},
+framed(){try{return window.top!==window.self}catch(e){return true}},
+open(){const w=window.open('about:blank','_blank');if(!w){App.toast('Allow pop-ups to use about:blank mode');return false}
+try{const d=w.document,f=d.createElement('iframe');d.title='about:blank';d.body.style.cssText='margin:0;height:100%;background:#000';d.documentElement.style.height='100%';f.src=location.href;f.style.cssText='border:0;width:100%;height:100%;display:block';d.body.appendChild(f)}catch(e){try{w.close()}catch(x){}return false}return true},
+toggle(){if(Cloak.on()){try{localStorage.removeItem(Cloak.key)}catch(e){}Cloak.paint();App.toast('about:blank mode off');if(Cloak.framed()){try{window.top.close()}catch(e){}}return}
+if(!Cloak.framed()&&!Cloak.open())return;try{localStorage.setItem(Cloak.key,'1')}catch(e){}Cloak.paint();App.toast('about:blank mode on')},
+paint(){const b=$('cloak'),l=$('cloakl');if(!b)return;const o=Cloak.on();b.setAttribute('aria-pressed',String(o));l.textContent='about:blank: '+(o?'On':'Off');b.classList.toggle('on',o)}};
 const Shell={
 show(v){$('acct').hidden=!v;$('sb').hidden=!v},
-update(){if(!$('hb-bal'))return;const s=Rank.status(),d=Store.d;$('hb-bal').textContent='$'+Econ.fmt(d.balance);$('hb-pt').textContent=playtimeTxt(Store.playtime().t);$('hb-gems').innerHTML=gemIcon(15)+' '+d.gems;
+update(){if(!$('hb-bal'))return;const s=Rank.status(),d=Store.d;$('hb-bal').textContent='$'+Econ.fmt(d.balance);$('hb-gems').innerHTML=gemIcon(15)+' '+d.gems;
 $('hb-un').innerHTML=Cos.user(esc(d.user||''),d.eq.grad);$('hb-tag').innerHTML=d.eq.tag?Cos.html(Cos.by(d.eq.tag)):'<span class="notag">[NO TAG]</span>';
 $('hb-rank').innerHTML=Badge.txt(s.idx)+(s.ready?'<em>RANK-UP READY</em>':'');$('hb-next').innerHTML=s.next?Badge.txt(s.idx+1):`<b class="rk" style="background-image:${Badge.grad(CFG.RANKS.length-1)}">MAX</b>`},
-tick(){const now=Date.now(),rdy=Daily.ready(now),ms=Daily.readyIn(now);if(Store.d.user&&$('hb-pt'))$('hb-pt').textContent=playtimeTxt(Store.tickPlaytime(now));
+tick(){const now=Date.now(),rdy=Daily.ready(now),ms=Daily.readyIn(now);if(Store.d.user){const pt=Store.tickPlaytime(now),pe=$('hb-pt');if(pe)pe.textContent=playtimeTxt(pt)}
 document.querySelectorAll('[data-cd]').forEach(e=>e.textContent=rdy?'READY':hms(ms));
 document.querySelectorAll('[data-spin]').forEach(b=>{const txt=rdy?(b.dataset.spin==='link'?'SPIN ON DAILY REWARD PAGE':'SPIN'):'NEXT SPIN IN '+hms(ms);if(b.textContent!==txt)b.textContent=txt;b.classList.toggle('off',!rdy);if(b.tagName==='BUTTON')b.disabled=!rdy||Wheel.busy});
 const bx=Math.max(0,Store.d.bx-now);document.querySelectorAll('[data-bx]').forEach(e=>e.textContent=bx?`2X bonus active: ${hms(bx).slice(3)} left`:'No active bonus');
 document.querySelectorAll('[data-shop]').forEach(e=>e.textContent=hms(Shop.expires(now)-now));
-document.querySelectorAll('[data-qreset]').forEach(e=>{const l=Quests.nextReset(e.dataset.qreset,now)-now;e.textContent=e.dataset.qreset==='w'?'Resets in '+dhms(l):hms(l)});
+document.querySelectorAll('[data-qreset]').forEach(e=>{const l=Quests.nextReset(e.dataset.qreset,now)-now;e.textContent='Resets in '+(e.dataset.qreset==='w'?dhms(l):hmsr(l))});
 if(typeof Pages!=='undefined'&&Pages._tick)Pages._tick(now)},
 init(){const sb=$('sb'),t=$('sbt'),set=o=>{sb.classList.toggle('open',o);t.setAttribute('aria-expanded',o)};
 t.onclick=e=>{e.stopPropagation();set(!sb.classList.contains('open'))};
@@ -34,6 +46,7 @@ sb.addEventListener('click',e=>{if(e.target.closest('a'))set(false)});document.a
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sb.classList.contains('open')){set(false);t.focus()}});
 $('hb-user').onclick=()=>{const m=Modal.open(`<p class="rdisc">Change username</p><input id="nun" maxlength="16" value="${esc(Store.d.user)}" aria-label="Username"><div class="mbtns"><button class="btn" id="nys">Save</button><button class="btn dim" id="nno">Cancel</button></div>`,{label:'Change username',esc:()=>m.close()});
 $('nno').onclick=()=>m.close();$('nys').onclick=()=>{if(App.setUser($('nun').value)){m.close();Shell.update();App.toast('Username saved')}else App.toast('Type a username first')}};
+$('cloak').onclick=Cloak.toggle;Cloak.paint();if(typeof addEventListener==='function')addEventListener('storage',e=>{if(e.key===Cloak.key)Cloak.paint()});
 setInterval(Shell.tick,1000);Shell.tick()}};
 const Modal={seen:false,
 open(html,{label='Dialog',esc:onEsc,wide}={}){const o=document.createElement('div');o.className='mo';o.innerHTML=`<div class="mb${wide?' wide':''}" role="dialog" aria-modal="true" aria-label="${label}">${html}</div>`;document.body.appendChild(o);$('app').setAttribute('aria-hidden','true');requestAnimationFrame(()=>o.classList.add('in'));
@@ -77,25 +90,29 @@ Wheel.busy=true;win=k;spin={t0:performance.now(),a0:ang,a1:base+((((360-ctr-off)
 const Dash={
 bar:(t,f)=>`<div class="pb"><i style="width:${Math.min(100,Math.max(0,f*100))}%"></i><span>${t}</span></div>`,
 rankBars(s){return s.max?'':Dash.bar(`$${Econ.fi(s.coin)}/${Econ.fi(s.req.c)} earned`,s.coin/s.req.c)+Dash.bar(`${s.rounds}/${s.req.r} mini-game rounds played`,s.rounds/s.req.r)},
-questBars(sc){Quests.sync();return Quests.list(sc).map(q=>{const p=Quests.prog(sc,q),cl=Quests.claimed(sc,q);return `<div class="qm"><small>${q.name}${cl?' (claimed)':''}</small>${Dash.bar(q.kind==='profit'?`$${Econ.fi(p)}/$${Econ.fi(q.target)}`:`${p}/${q.target}`,p/q.target)}</div>`}).join('')},
+questBars(sc){Quests.sync();return Quests.list(sc).map(q=>{const p=Quests.prog(sc,q),cl=Quests.claimed(sc,q);return `<div class="qm"><small>${q.name}${cl?' (claimed)':''}</small>${Dash.bar(q.kind==='profit'?`$${Econ.fi(p)}/$${Econ.fi(q.target)}`:q.kind==='time'?`${fdur(p)}/${fdur(q.target)}`:`${p}/${q.target}`,p/q.target)}</div>`}).join('')},
 home(app){const s=Rank.status();Quests.sync();
 app.innerHTML=`<h2 class="sec">🤖 0-100 Mini-games ›</h2><div class="cards">${LIST.map(([k,n])=>`<a class="card c-${k}" href="#${k}" aria-label="${n}" title="${n}"></a>`).join('')}</div>
 <div class="dash"><section class="dp" aria-label="Your Balance"><h3>💲 Your Balance ›</h3><div class="inner"><div class="wtop"><span class="wi">👛</span><div><small>Current Balance:</small><div class="big2">$<span class="bal"></span> </div><div class="gmrow">${gemIcon(20)} <b class="gembal"></b> Gems</div></div></div>
 <div class="who">${Cos.user(esc(Store.d.user),Store.d.eq.grad)} ${Store.d.eq.tag?Cos.html(Cos.by(Store.d.eq.tag)):'<span class="notag">[NO TAG]</span>'}</div>
 <div id="rsw"><button class="pillbtn sm" id="rs">Click to reset back to $${Econ.fi(Econ.startBalance())}</button></div><div class="stats">${Stats.html()}</div></div></section>
-<section class="dp" aria-label="Rank Status"><h3>🎖️ Rank Status ›</h3><div class="inner"><div class="rrow"><div><small>Current Rank:</small><div>${Badge.txt(s.idx,'font-size:30px')}</div></div>${Badge.svg(s.idx,52)}</div>
-${s.max?'<p class="rq">Maximum rank reached!</p>':`<p class="rq">RANK-UP REQUIREMENTS:<br>$${Econ.fi(s.req.c)} and ${s.req.r} minigames played.</p>${Dash.rankBars(s)}<div class="rrow"><div><small>Next Rank:</small><div>${Badge.txt(s.idx+1,'font-size:26px')}</div></div>${Badge.svg(s.idx+1,52)}</div>`}
+<section class="dp rkp" aria-label="Rank Status"><h3>🎖️ Rank Status ›</h3><div class="inner"><div class="rrow"><div><small>Current Rank:</small><div>${Badge.txt(s.idx)}</div></div>${Badge.svg(s.idx,52)}</div>
+${s.max?'<p class="rq">Maximum rank reached!</p>':`<p class="rq">RANK-UP REQUIREMENTS:<br>$${Econ.fi(s.req.c)} and ${s.req.r} minigames played.</p>${Dash.rankBars(s)}<div class="rrow"><div><small>Next Rank:</small><div>${Badge.txt(s.idx+1)}</div></div>${Badge.svg(s.idx+1,52)}</div>`}
 <a class="rubtn" href="#rankup">Go to Rank-Up Page</a><p class="mline" data-bx></p></div></section>
 <section class="dp" aria-label="Daily Reward"><h3>🎲 Daily Reward ›</h3><div class="inner"><div id="hw" class="hw"></div><a class="spinlink" href="#dailyspin" data-spin="link">SPIN ON DAILY REWARD PAGE</a></div></section></div>
-<div class="dash2"><section class="dp"><h3>📅 Daily Quests › <small class="rs">resets in <span data-qreset="d"></span></small></h3><div class="inner">${Dash.questBars('d')}</div></section>
-<section class="dp"><h3>🗓️ Weekly Quests › <small class="rs"><span data-qreset="w"></span></small></h3><div class="inner">${Dash.questBars('w')}<a class="spinlink" href="#quests">Open Quests page</a></div></section></div>`;
+<section class="dp ptp" aria-label="User Playtime"><h3>🕑 User Playtime ›</h3><div class="inner"><div class="ptv" id="hb-pt">${playtimeTxt(Store.playtime().t)}</div></div></section>
+<div class="dash2"><section class="dp"><h3>📅 Daily Quests › <small class="rs"><span data-qreset="d"></span></small></h3><div class="inner" id="qd-in">${Dash.questBars('d')}</div></section>
+<section class="dp"><h3>🗓️ Weekly Quests › <small class="rs"><span data-qreset="w"></span></small></h3><div class="inner"><div id="qw-in">${Dash.questBars('w')}</div><a class="spinlink" href="#quests">Open Quests page</a></div></section></div>`;
 const w=Wheel.create($('hw')),rsw=$('rsw'),lbl=()=>`Click to reset back to $${Econ.fi(Econ.startBalance())}`,ask=()=>{rsw.innerHTML='<button class="pillbtn sm" id="ry" style="border-color:#ef4444;color:#fca5a5">Are you sure?</button> <button class="pillbtn sm" id="rn">Cancel</button>';
 $('ry').onclick=()=>{Econ.resetBalance();App.route();App.toast('Balance reset to $'+Econ.fi(Econ.startBalance()))};$('rn').onclick=()=>{rsw.innerHTML=`<button class="pillbtn sm" id="rs">${lbl()}</button>`;$('rs').onclick=ask}};
-$('rs').onclick=ask;Shell.tick();Modal.disclaimer();return()=>w.destroy()}};
+$('rs').onclick=ask;
+const qsig=()=>['d','w'].map(sc=>Quests.list(sc).map(q=>Quests.prog(sc,q)+':'+Quests.claimed(sc,q)).join()).join('|');let sg=qsig();
+Pages._tick=()=>{Quests.sync();const n=qsig();if(n!==sg){sg=n;const a=$('qd-in'),b=$('qw-in');if(a)a.innerHTML=Dash.questBars('d');if(b)b.innerHTML=Dash.questBars('w')}};   // live quest progress (playtime quests move while you sit on the homepage)
+Shell.tick();Modal.disclaimer();return()=>{Pages._tick=null;w.destroy()}}};
 Pages.rankup={mount(app){const s=Rank.status(),R=CFG.RANKS;
-const reqs=(a,b)=>R.slice(a,b).map((r,k)=>`<div>${Badge.txt(a+k)} → ${Badge.txt(a+k+1)} $${Econ.fi(r.req.c)} and ${r.req.r} minigames played</div>`).join('');
-const allr=(a,b)=>R.slice(a,b).map((r,k)=>{const i=a+k;return `<div class="ar${i===s.idx?' cur':''}">${Badge.txt(i,`font-size:${22+Math.min(i,10)*3}px`)}${Badge.svg(i,26+Math.min(i,10)*2)}<span>$${Econ.fi(r.rw.c)} + ${r.rw.g}</span>${gemIcon(22)}</div>`}).join('');
-app.innerHTML=`<div class="rpn" role="tablist" aria-label="Rank pages"><button class="rpb on" role="tab" aria-selected="true" data-p="0">Page 1</button><button class="rpb" role="tab" aria-selected="false" data-p="1">Page 2</button></div><div class="rpv"><div class="rpt"><section class="rpp" aria-label="Ranks, page 1"><div class="rpg"><div><h2 class="sec">🎖️ Rank Status ›</h2><div class="dp bigp"><div class="rtop"><div><small>Current Rank:</small><div>${Badge.txt(s.idx,'font-size:34px')}</div></div>${Badge.svg(s.idx,64)}${s.next?`<span class="arw">➜</span>${Badge.svg(s.idx+1,64)}`:''}<div class="tr"><small>Next Rank:</small><div>${s.next?Badge.txt(s.idx+1,'font-size:34px'):'<b class="rk" style="background-image:'+Badge.grad(CFG.RANKS.length-1)+'">MAX RANK</b>'}</div></div></div>
+const reqs=(a,b)=>R.slice(a,b).map((r,k)=>`<div class="rqr"><span class="rqn">${Badge.txt(a+k)} → ${Badge.txt(a+k+1)}</span><span class="rqv">$${Econ.fi(r.req.c)} and ${r.req.r} minigames played</span></div>`).join('');
+const allr=(a,b)=>R.slice(a,b).map((r,k)=>{const i=a+k;return `<div class="ar${i===s.idx?' cur':''}">${Badge.txt(i,`--f:${22+Math.min(i,10)*3}px`)}${Badge.svg(i,26+Math.min(i,10)*2)}<span>$${Econ.fi(r.rw.c)} + ${r.rw.g}</span>${gemIcon(22)}</div>`}).join('');
+app.innerHTML=`<div class="rpn" role="tablist" aria-label="Rank pages"><button class="rpb on" role="tab" aria-selected="true" data-p="0">Page 1</button><button class="rpb" role="tab" aria-selected="false" data-p="1">Page 2</button></div><div class="rpv"><div class="rpt"><section class="rpp" aria-label="Ranks, page 1"><div class="rpg"><div><h2 class="sec">🎖️ Rank Status ›</h2><div class="dp bigp"><div class="rtop"><div><small>Current Rank:</small><div>${Badge.txt(s.idx)}</div></div>${Badge.svg(s.idx,64)}${s.next?`<span class="arw">➜</span>${Badge.svg(s.idx+1,64)}`:''}<div class="tr"><small>Next Rank:</small><div>${s.next?Badge.txt(s.idx+1):'<b class="rk" style="background-image:'+Badge.grad(CFG.RANKS.length-1)+'">MAX RANK</b>'}</div></div></div>
 ${s.max?'<p class="rq">You reached the maximum rank: ${R[R.length-1].n}.</p>':`<p class="rq">RANK-UP REQUIREMENTS:<br>$${Econ.fi(s.req.c)} and ${s.req.r} minigames played.</p>${Dash.rankBars(s)}<p class="mline">Reward for ${R[s.idx+1].n}: <b>$${Econ.fi(R[s.idx+1].rw.c)}</b> starting  + <b>${R[s.idx+1].rw.g}</b> ${gemIcon(14)} Gems</p>`}
 <button class="rubtn big" id="rub" ${s.ready?'':'disabled'}>${s.max?'MAX RANK':'RANK-UP'}</button>
 <p class="warn">Warning: Ranking up <u>resets</u> <span class="red">all</span> of your coins (to the new rank's starting cash) and your rank progress. Lifetime stats and owned cosmetics are kept.</p></div>
