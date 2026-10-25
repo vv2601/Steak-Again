@@ -9,7 +9,7 @@ def(){return{user:'',balance:CFG.UNRANKED_START,pw:0,pl:0,g:{},rk:0,rc:0,rq:0,lq
 num(v,fb){return typeof v==='number'&&isFinite(v)?v:fb},
 int(v,fb=0){return Math.max(0,Math.floor(this.num(v,fb)))},
 best(o){return o&&typeof o==='object'&&this.num(o.v,0)>0&&typeof o.g==='string'?{v:o.v,g:o.g}:null},
-scope(o){const s={p:{rounds:0,profit:0,rank:0},c:{},n:{}};if(o&&typeof o==='object'){for(const k in s.p)s.p[k]=Math.max(0,this.num(o.p&&o.p[k],0));for(const k of['c','n'])if(o[k]&&typeof o[k]==='object')for(const id in o[k])if(o[k][id])s[k][id]=1}return s},
+scope(o){const s={p:{rounds:0,profit:0,rank:0,time:0},c:{},n:{}};if(o&&typeof o==='object'){for(const k in s.p)s.p[k]=Math.max(0,this.num(o.p&&o.p[k],0));for(const k of['c','n'])if(o[k]&&typeof o[k]==='object')for(const id in o[k])if(o[k][id])s[k][id]=1}return s},
 /* ---- integrity ---- */
 hash(s){let h1=0xdeadbeef,h2=0x41c6ce57;const t='01O0|2.25|'+s;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
 h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(h2>>>0).toString(36)+'-'+(h1>>>0).toString(36)},
@@ -49,7 +49,11 @@ save(){this.check();this.writeSigned(this.key,JSON.stringify(this.d))},
    if no other tab has already counted the last second, so playtime ~= wall-clock time with the game open. */
 playtime(){const r=this.readSigned(this.tpKey);if(r.status==='bad'||r.raw==null)return{t:0,l:0};try{const o=JSON.parse(r.raw);return{t:Math.max(0,this.num(o&&o.t,0)),l:this.num(o&&o.l,0)}}catch(e){return{t:0,l:0}}},
 tickPlaytime(now=Date.now()){const p=this.playtime();if(typeof document!=='undefined'&&document.visibilityState==='hidden')return p.t;
-const dt=now-p.l;if(dt>=900){p.t+=Math.min(dt,2500);p.l=now;this.writeSigned(this.tpKey,JSON.stringify(p))}return p.t}};
+const dt=now-p.l;if(dt>=900){const add=Math.min(dt,2500);p.t+=add;p.l=now;this.writeSigned(this.tpKey,JSON.stringify(p));this.questTime(add)}return p.t},
+/* v2.4 playtime quests: fed ONLY from the shared playtime counter above (one tab counts each second, hidden tabs add nothing), batched to one save per ~5 s. */
+qt:0,
+questTime(ms,force){if(typeof Quests==='undefined'||!this.d||!this.d.user)return;if(ms>0)this.qt+=ms;if(!this.qt||(!force&&this.qt<5000))return;const a=this.qt;this.qt=0;this.load();Quests.add('time',a);this.save()}};
 Store.load();
+if(typeof addEventListener==='function')addEventListener('pagehide',()=>Store.questTime(0,true));   // flush pending quest playtime
 if(typeof addEventListener==='function')addEventListener('storage',e=>{if(e.key===Store.key){Store.load();try{App.bal()}catch(x){}}}); // keep other tabs in sync
 if(typeof document!=='undefined'&&typeof setInterval==='function')setInterval(()=>Store.check(),1000);   // clamp out-of-band edits within 1 s

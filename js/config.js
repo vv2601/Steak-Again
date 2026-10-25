@@ -38,7 +38,7 @@ MIN_BET:{PLINKO:1},DEFAULT_MIN:0.01,
 RAR:{common:{n:'Common',gems:1,deal:1,w:50,color:'#f1f5f9'},rare:{n:'Rare',gems:2,deal:1,w:30,color:'#4f7cff'},epic:{n:'Epic',gems:3,deal:2,w:15,color:'#d066e8'},legendary:{n:'Legendary',gems:5,deal:3,w:5,color:'#ffd84d'}},
 SHOP:{ROTATION_MS:12*3600*1000,GRADS:4,TAGS:3,DEALS:4},   // 3 featured + 4 special deals = 7 offers
 QUEST:{DAILY_MS:24*3600*1000,WEEKLY_MS:7*24*3600*1000,WEEK_OFFSET_MS:4*24*3600*1000, // weeks start Monday 00:00 UTC
-daily:[{id:'d_rounds',kind:'rounds',target:100,gems:2,name:'Play 100 Minigame Rounds'},{id:'d_profit',kind:'profit',target:500,gems:1,name:'Get $500 Steakcoin Profit from Minigames'}],
-weekly:[{id:'w_rounds',kind:'rounds',target:250,gems:3,name:'Play 250 Minigame Rounds'},{id:'w_profit',kind:'profit',target:2500,gems:2,name:'Get $2,500 Steakcoin Profit from Minigames'},{id:'w_rank',kind:'rank',target:1,gems:1,name:'Rank up once'}]},
+daily:[{id:'d_r500',kind:'rounds',target:500,gems:2,name:'Play 500 minigame rounds'},{id:'d_p10k',kind:'profit',target:10000,gems:3,name:'Earn 10,000 01O0coin profit from minigames'},{id:'d_t1h',kind:'time',target:3600000,gems:2,name:'Play for 1 hour'}],
+weekly:[{id:'w_r4k',kind:'rounds',target:4000,gems:3,name:'Play 4,000 minigame rounds'},{id:'w_p100k',kind:'profit',target:100000,gems:2,name:'Earn 100,000 01O0coin profit from minigames'},{id:'w_rk5',kind:'rank',target:5,gems:2,name:'Rank up 5 times'},{id:'w_t5h',kind:'time',target:18000000,gems:2,name:'Play for 5 hours'}]},   // time targets are in ms (fed by Store.tickPlaytime)
 DAILY:{COOLDOWN_MS:24*3600*1000,BONUS_MS:15*60*1000,BONUS_MULT:2,SPIN_MS:6500,   // 2X bonus multiplies winning PROFIT while active
 REWARDS:[{id:'low',p:60,min:250,max:750},{id:'gem',p:20,min:1,max:4},{id:'x2',p:20}]}};  // p sums to 100; gem reward is 1-4 Gems
