@@ -17,9 +17,14 @@ Gem-Shop cleanup (no rotation timer), crate-opening Skip button fixed in its own
 ## Update 2.45
 - **Rank Expansion 2**: Rank-Up page 3; Extreme Demon -> Extreme Demon I; new ranks Extreme Demon II/III, Impossible Demon I-III, Unreal I-III, Division 5-1 (max). Icons `impossibledemon/unreal/div5..div1.jpg` are white placeholders: replace the files, keep the names.
 - **Speeds** (animation only): Cases 1.5x Silver, 2x Amethyst, 2.5x Impossible Demon I; Aviamasters 1.5x Silver, 2x Amethyst, 2.5x Division 5, 2.75x Division 1 (shown beside the Launch button). Rank-Up reward lines are generated from `CFG`.
-- **Calculator landing page** (`index.html`); the game moved to `game.html`. Typing `0 - 100` then `=` opens the game in an about:blank tab (calculator + game as two views); **Backspace** toggles the views (not while typing in an input). If pop-ups are blocked the tab navigates calculator <-> game instead. The sidebar about:blank button was removed.
+- **Calculator landing page** (`index.html`); the game moved to `game.html`. Typing `0 - 100` then `=` opens the game in an about:blank tab (calculator + game as two views). If pop-ups are blocked the tab navigates calculator <-> game instead. The sidebar about:blank button was removed.
 - **Aviamasters** RTP ~96.8% -> ~98.3% (lower runway-slide chances; rocket/item odds unchanged).
 - **Anti-macro**: `guard.js` now analyses every trusted click (including ones ignored during a Cases spin), catches fast/regular autoclickers, escalates the cool-down and keeps it across refreshes.
+
+## Latest changes
+- **Right Shift** (tap it on its own) toggles between the calculator and the game instead of Backspace. Backspace is now always the calculator's delete key. The tip in the game header says so.
+- **Calculator page**: light/dark mode switch (remembered in `localStorage`), a right-hand side bar with an interactive periodic table (`js/ptable.js`). Clicking the Gold (Au) element opens the game, the same way `0 - 100 =` does.
+- **Removed** the cloud profile / cosmetics cloud-sync integration (its script, demo page and settings panel). Saves are local only.
 
 ## Tests
 `node tests/update245.test.js`, `node tests/update23.test.js`, `node tests/economy.test.js`, `node tests/security.test.js`
