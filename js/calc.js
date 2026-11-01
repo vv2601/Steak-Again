@@ -1,4 +1,5 @@
-/* v2.45 calculator landing page (index.html). Safe recursive-descent evaluator (no eval). Easter egg: the exact expression 0-100 followed by "=" opens the game. */
+/* v2.45 calculator landing page (index.html). Safe recursive-descent evaluator (no eval). Easter egg: the exact expression 0-100 followed by "=" opens the game.
+   Latest changes: the view toggle key is Right Shift (js/toggle.js), Backspace is always the calculator's delete key, and window.__openGame is exposed so the periodic table (js/ptable.js, Gold) can open the game. */
 (function(root){
 function evaluate(src,deg){
 const s=String(src).replace(/[−–]/g,'-').replace(/[×·]/g,'*').replace(/÷/g,'/').replace(/π/g,'pi').replace(/√/g,'sqrt').replace(/\s+/g,'').toLowerCase();
@@ -27,8 +28,9 @@ const show=()=>{disp.textContent=view(expr)||'0';disp.scrollLeft=disp.scrollWidt
 const add=t=>{if(fresh){if(/^[\d.(a-z]/.test(t))expr='';fresh=false;ex.textContent=''}expr+=t;show()};
 const back=()=>{if(fresh){expr='';fresh=false;ex.textContent=''}else expr=expr.replace(/(sqrt\(|sin\(|cos\(|tan\(|asin\(|acos\(|atan\(|ln\(|log\(|abs\(|pi|.)$/,'');show()};
 const clear=()=>{expr='';fresh=false;ex.textContent='';show()};
-/* Easter egg: about:blank host tab that holds the calculator AND the game (window.__toggle switches them); falls back to navigating this tab */
-const HOST="(function(){var v='game',F={game:document.getElementById('vg'),calc:document.getElementById('vc')};function show(x){v=x;for(var k in F)F[k].style.display=k===x?'block':'none';try{F[x].contentWindow.focus()}catch(e){}}window.__toggle=function(){show(v==='game'?'calc':'game')};window.__view=function(){return v};F.game.addEventListener('load',function(){if(v==='game')try{F.game.contentWindow.focus()}catch(e){}});F.calc.addEventListener('load',function(){if(v==='calc')try{F.calc.contentWindow.focus()}catch(e){}});document.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();if(!e.repeat)window.__toggle()}});show('game')})();";
+/* about:blank host tab that holds the calculator AND the game (window.__toggle switches them); falls back to navigating this tab.
+   The host document also listens for a Right Shift tap (press + release with no other key in between), used when the host itself has focus. */
+const HOST="(function(){var v='game',a=false,F={game:document.getElementById('vg'),calc:document.getElementById('vc')};function show(x){v=x;for(var k in F)F[k].style.display=k===x?'block':'none';try{F[x].contentWindow.focus()}catch(e){}}window.__toggle=function(){show(v==='game'?'calc':'game')};window.__view=function(){return v};F.game.addEventListener('load',function(){if(v==='game')try{F.game.contentWindow.focus()}catch(e){}});F.calc.addEventListener('load',function(){if(v==='calc')try{F.calc.contentWindow.focus()}catch(e){}});document.addEventListener('keydown',function(e){if(e.code==='ShiftRight'){if(!e.repeat)a=!(e.ctrlKey||e.metaKey||e.altKey)}else a=false});document.addEventListener('keyup',function(e){if(e.code==='ShiftRight'){var t=a;a=false;if(t)window.__toggle()}});show('game')})();";
 function host(w){try{const d=w.document,base=new URL('.',location.href).href;d.title=document.title;d.documentElement.style.height='100%';d.body.style.cssText='margin:0;height:100%;background:#fff';
 const mk=(id,src)=>{const f=d.createElement('iframe');f.id=id;f.src=src;f.style.cssText='border:0;width:100%;height:100%;display:none';d.body.appendChild(f)};
 mk('vg',base+'game.html');mk('vc',base+'index.html?embed=1');const sc=d.createElement('script');sc.textContent=HOST;d.body.appendChild(sc);return true}catch(e){return false}}
@@ -40,11 +42,15 @@ if(w&&host(w)){gw=w;return}
 try{if(w)w.close()}catch(e){}
 try{sessionStorage.setItem('zh_fb','1')}catch(e){}
 location.href='game.html'}
+root.__openGame=openGame;   // used by js/ptable.js (Gold element)
 function equals(){if(!expr)return;if(isEgg(expr)){openGame();return}
 try{const r=evaluate(expr,deg);ex.textContent=view(expr)+' =';expr=String(r);fresh=true;disp.textContent=view(expr)}catch(e){ex.textContent=view(expr)+' =';disp.textContent=e.message==='Undefined'?'Undefined':'Error';expr='';fresh=false}}
 document.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k;if(k==='=')equals();else if(k==='C')clear();else if(k==='bk')back();else if(k==='mode'){deg=!deg;mode.textContent=deg?'DEG':'RAD'}else add(k)}));
-addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.defaultPrevented)return;const k=e.key;
-if(k==='Backspace'){e.preventDefault();back()}   /* reached only when toggle.js did not claim Backspace (plain calculator use) */
+addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.defaultPrevented)return;
+if(document.body.classList.contains('pt-open'))return;   // periodic table dialog is open: keys belong to it
+const k=e.key;
+if(k==='Enter'&&e.target.closest&&e.target.closest('.bar,.rsb'))return;   // let Enter activate the theme switch / side bar buttons
+if(k==='Backspace'){e.preventDefault();back()}   /* Backspace is always the calculator's delete key; the view toggle is Right Shift (toggle.js) */
 else if(k==='Enter'||k==='='){e.preventDefault();equals()}else if(k==='Escape'||k==='Delete')clear();
 else if(/^[0-9.+\-*/^()]$/.test(k)){e.preventDefault();add(k)}else if(k==='x'||k==='X')add('*')});
 show()})(typeof window!=='undefined'?window:this);

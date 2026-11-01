@@ -46,11 +46,6 @@ $('hb-user').onclick=()=>{
       <button class="btn" id="nys">Save username</button>
       <button class="btn dim" id="nno">Cancel</button>
     </div>
-    <hr>
-    <p>Sync your profile preferences with Firebase.</p>
-    <button class="btn" id="openCloudProfile">
-      Cloud profile settings
-    </button>
   `,{label:'Account settings',esc:()=>m.close()});
 
   $('nno').onclick=()=>m.close();
@@ -62,18 +57,6 @@ $('hb-user').onclick=()=>{
       App.toast('Username saved');
     }else{
       App.toast('Type a username first');
-    }
-  };
-
-  $('openCloudProfile').onclick=()=>{
-    m.close();
-    const panel=document.getElementById('firebase-profile-panel');
-
-    if(panel){
-      panel.open=true;
-      panel.scrollIntoView({behavior:'smooth',block:'nearest'});
-    }else{
-      App.toast('Firebase profile is not ready yet');
     }
   };
 };
