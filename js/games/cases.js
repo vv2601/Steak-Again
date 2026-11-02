@@ -76,7 +76,7 @@ const rnd=()=>{try{return crypto.getRandomValues(new Uint32Array(1))[0]/42949672
 function roll(){let r=Math.floor(rnd()*TOT),i=0;for(;i<RAR.length-1;i++){if(r<RAR[i].w)break;r-=RAR[i].w}const z=RAR[i];return{r:z,m:Math.min(z.max,Math.max(z.min,Math.round((z.min+rnd()*(z.max-z.min))*100)/100))}}
 const rollReal=()=>{let o;do{o=roll()}while(!isReal(o));return o};   // dev forcing only
 const lookOf=k=>{const z=RAR.find(x=>x.k===k);return z.zero?{r:z,m:0}:{r:z,m:Math.round((z.min+rnd()*(z.max-z.min))*100)/100}},commonLook=()=>lookOf('Common');
-const XSVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5l15 15M19.5 4.5l-15 15" stroke="currentColor" stroke-width="4.6" stroke-linecap="round" fill="none"/></svg>',lbl=o=>o.r.zero?'X':o.m.toFixed(2)+'x';
+const XSVG = '<svg viewBox="0 0 24 24" width="42" height="42" aria-hidden="true" style="display:block"><path d="M4.5 4.5l15 15M19.5 4.5l-15 15" stroke="currentColor" stroke-width="4.6" stroke-linecap="round" fill="none"/></svg>';
 const tile = (o, i) =>
   `<div class="ct${o.r.fx ? ' hi r-' + o.r.k : o.r.zero ? ' r-X' : ''}" data-i="${i}" tabindex="0"
        role="button" aria-label="${o.r.k} ${lbl(o)}"
