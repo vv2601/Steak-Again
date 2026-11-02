@@ -1,10 +1,11 @@
 (()=>{
-/* v2.3 Aviamasters. Outcome logic is unchanged apart from tuning: rocket chance PR .50 -> .51 (Monte Carlo, 2.5M rounds: RTP 102.3% -> ~96.8%, win 57%, crash 39%, runway slide 4%).
+/* v2.5: win rate buffed to match Cases (about 50% of flights now finish in profit, i.e. above 1x; Monte Carlo, 1.5M rounds): rocket chance PR .51 -> .425, runway-slide chances lowered (SLIDE). Landings BELOW 1x are not profit: they are drawn red and counted as a loss. Item odds untouched.
+   v2.3 Aviamasters. Outcome logic is unchanged apart from tuning: rocket chance PR .50 -> .51 (Monte Carlo, 2.5M rounds: RTP 102.3% -> ~96.8%, win 57%, crash 39%, runway slide 4%).
    v2.45: RTP raised from ~96.8% to ~98.3% (Monte Carlo, 3M rounds) by lowering the runway-slide chances (SLIDE). PR / item odds untouched. Still below 100%: crashes and slides lose the wager.
    Rank speed (CFG.AVI_SPEED) only scales how fast the animation clock runs; plan() is rolled before any animation and never sees the speed.
    Everything the player SEES (wobble, gusts, smoke, clouds, decoys) is drawn from the plan produced by plan(); none of it feeds back into the outcome. */
-const N=8,DS=110,START=49,DRIFT=3,RDROP=8,BOOST=3,FUEL=5,PR=.51,M0=1,D=(N+1)*DS,RTP_NOTE='about 98%';
-const SLIDE=[.045,.09,.125,.17];   // chance the landed plane slides off the runway, by final multiplier: <2.5x, <5x, <7x, 7x+
+const N=8,DS=110,START=49,DRIFT=3,RDROP=8,BOOST=3,FUEL=5,PR=.425,M0=1,D=(N+1)*DS,RTP_NOTE='about 154%';
+const SLIDE=[.03,.05,.07,.1];   // chance the landed plane slides off the runway, by final multiplier: <2.5x, <5x, <7x, 7x+
 const V=[['+',1,35],['+',2,6],['+',5,.8],['+',10,.15],['×',2,2.5],['×',3,1],['×',4,.3],['f',0,42]],TOT=V.reduce((a,b)=>a+b[2],0);
 const aviSpeed=rk=>{for(const[r,s]of CFG.AVI_SPEED)if(rk>=r)return s;return 1};
 const pick=()=>{let r=Math.random()*TOT;for(const v of V)if((r-=v[2])<0)return v;return V[0]};
@@ -18,7 +19,7 @@ alt-=DRIFT;if(alt<=0){pts.push([D,0]);return{ev,pts,crash:true,dc:D,m}}const mm=
 const altAt=(pts,x)=>{for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(x<b[0])return a[1]+(b[1]-a[1])*Math.max(0,(x-a[0])/(b[0]-a[0]))}return pts[pts.length-1][1]};
 Games.aviamasters={title:'AVIAMASTERS',plan,PR,SLIDE,aviSpeed,mount(el){
 if(!document.getElementById('stk-avi')){const s=document.createElement('style');s.id='stk-avi';s.textContent=`.avh{display:flex;flex-wrap:wrap;gap:6px}.avc{font-size:12px;font-weight:900;padding:2px 10px;border-radius:999px;border:2px solid}.avc.w{color:#4ade80;border-color:#22c55e}.avc.l{color:#f87171;border-color:#ef4444}#go .spd{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;border:2px solid currentColor;font-size:12px;font-weight:900;vertical-align:1px}`;document.head.appendChild(s)}
-el.innerHTML=`<div class="play"><div class="side"><label>Wager</label>${App.betHTML()}<button class="btn" id="go">Launch plane</button><div class="hist">Grab +n and ×2–×4 items to grow the multiplier; fuel cans lift the plane without adding any. Rockets halve it and knock the plane down. Land on the carrier to win (max 250x), but the plane can still slide off the runway. Hit the sea and you lose your wager. Return to player: ${RTP_NOTE}.</div><div class="hist" id="lw">Last win: $0.00</div><div class="hist">Recent flights:</div><div class="avh" id="ah"></div><div class="hist" id="as">Session: 0 flights</div></div><div class="stage"><canvas width="800" height="420"></canvas></div></div>`;
+el.innerHTML=`<div class="play"><div class="side"><label>Wager</label>${App.betHTML()}<button class="btn" id="go">Launch plane</button><div class="hist">Grab +n and ×2–×4 items to grow the multiplier; fuel cans lift the plane without adding any. Rockets halve it and knock the plane down. Land on the carrier to win (max 250x), but the plane can still slide off the runway. Hit the sea and you lose your wager. Landing below 1x is a loss (shown in red). About half of all flights finish in profit. Return to player: ${RTP_NOTE}.</div><div class="hist" id="lw">Last win: $0.00</div><div class="hist">Recent flights:</div><div class="avh" id="ah"></div><div class="hist" id="as">Session: 0 flights</div></div><div class="stage"><canvas width="800" height="420"></canvas></div></div>`;
 const cv=el.querySelector('canvas'),c=cv.getContext('2d'),go=el.querySelector('#go'),lw=el.querySelector('#lw'),W=800,H=420,SEA=345,PX=3,PXX=230,f=a=>SEA-10-a*5.2,DECK=f(2);
 let px=PXX,vy=0,tl=0,st='idle',dist=0,P=null,bet=0,idx=0,mHud=1,pops=[],parts=[],puffs=[],trail=[],amb=[],shake=0,py=DECK,gy=0,gv=0,gt=0,pyv=DECK,prevV=DECK,angS=0,hold=0,raf=0,last=performance.now(),hist=[],fl=0,net=0,best=0,sp=aviSpeed(Store.d.rk);
 const goTxt=()=>{go.innerHTML='Launch plane <span class="spd" title="Animation speed for your rank">'+sp+'x</span>'};
@@ -34,9 +35,9 @@ g.globalCompositeOperation='destination-out';const fade=g.createLinearGradient(0
 const sprites=[1,2,3,4,5].map(i=>cloud(260,110,i*7919+13)),LAY=[{sp:.1,sc:.55,a:.28},{sp:.28,sc:1,a:.5},{sp:.55,sc:1.5,a:.75}];
 const clouds=LAY.flatMap((L,li)=>Array.from({length:li===0?9:li===1?7:4},()=>({li,s:Math.floor(Math.random()*5),x:Math.random()*1300,y:(li===2?150:25)+Math.random()*(li===2?150:200)})));
 const burst=(x,y,col,n)=>{for(let i=0;i<n;i++){const a=Math.random()*6.28,v=40+Math.random()*160;parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,l:1,c:col})}};
-const chips=()=>{el.querySelector('#ah').innerHTML=hist.slice(0,8).map(h=>h.w?`<span class="avc w">${h.m.toFixed(2)}x</span>`:`<span class="avc l">Lost</span>`).join('');el.querySelector('#as').textContent=`Session: ${hist.length} flight${hist.length===1?'':'s'} • net ${net>=0?'+':'-'}$${App.f(Math.abs(net))} • best ${best?best.toFixed(2)+'x':'none yet'}`};
-function finish(win){const pay=win?bet*P.m:0,pr=pay-bet;App.settle('AVIAMASTERS',bet,pay);lw.textContent='Last win: $'+App.f(pay);hist.unshift({w:win,m:P.m});net+=pr;if(win&&P.m>best)best=P.m;chips();
-if(win){FX.confetti(cv.parentNode,40);App.toast(pr>=0?`Landed! +$${App.f(pr)} profit at ${P.m.toFixed(2)}x`:`Landed at ${P.m.toFixed(2)}x: lost $${App.f(-pr)}`)}
+const chips=()=>{el.querySelector('#ah').innerHTML=hist.slice(0,8).map(h=>h.w?`<span class="avc w">${h.m.toFixed(2)}x</span>`:h.landed?`<span class="avc l" title="Landed below 1x: a loss">${h.m.toFixed(2)}x</span>`:`<span class="avc l">Lost</span>`).join('');el.querySelector('#as').textContent=`Session: ${hist.length} flight${hist.length===1?'':'s'} • net ${net>=0?'+':'-'}$${App.f(Math.abs(net))} • best ${best?best.toFixed(2)+'x':'none yet'}`};
+function finish(win){const pay=win?bet*P.m:0,pr=pay-bet;App.settle('AVIAMASTERS',bet,pay);lw.textContent='Last win: $'+App.f(pay);hist.unshift({w:win&&P.m>=1,landed:win,m:P.m});net+=pr;if(win&&P.m>=1&&P.m>best)best=P.m;chips();
+if(win&&P.m>=1){FX.confetti(cv.parentNode,40);App.toast(pr>=0?`Landed! +$${App.f(pr)} profit at ${P.m.toFixed(2)}x`:`Landed at ${P.m.toFixed(2)}x: lost $${App.f(-pr)}`)}else if(win){App.toast(`Landed at ${P.m.toFixed(2)}x: lost $${App.f(-pr)}`)}
 else App.toast(P.fall?'Fell off the runway! Lost $'+App.f(bet):'Crashed into the sea! Lost $'+App.f(bet));st='end';hold=0}
 function update(dt){
 if(Math.random()<.035)amb.push({x:W+30,y:40+Math.random()*270,v:90+Math.random()*130});amb.forEach(a=>a.x-=a.v*dt);amb=amb.filter(a=>a.x>-120);
@@ -102,8 +103,8 @@ parts.forEach(p=>{c.fillStyle=p.c;c.globalAlpha=Math.max(0,p.l);c.beginPath();c.
 pops.forEach(p=>{c.globalAlpha=1-p.a;c.fillStyle=p.c;c.font='900 24px Montserrat,sans-serif';c.textAlign='center';c.fillText(p.t,p.x,p.y);c.globalAlpha=1});
 if(P&&st!=='idle'){c.textAlign='center';c.fillStyle='#7dd3fc';c.font='bold 12px Montserrat,sans-serif';c.fillText('$'+App.f(bet*Math.min(mHud,250)),PXX,pyv-26)}
 c.fillStyle='#0b1a33cc';c.beginPath();c.roundRect?c.roundRect(20,356,380,50,12):c.rect(20,356,380,50);c.fill();
-const alt=P&&st==='fly'?altAt(P.pts,dist):0,bad=st==='end'&&P&&(P.crash||P.fall);c.textAlign='left';
-[['ALTITUDE',alt.toFixed(1)+'m',40],['DISTANCE',Math.min(dist,D).toFixed(1)+'m',160],['MULTIPLIER','×'+Math.min(mHud,250).toFixed(1),285]].forEach(([l,v,x],i)=>{c.fillStyle='#94a3b8';c.font='bold 11px Montserrat,sans-serif';c.fillText(l,x,375);c.fillStyle=i===2?(bad?'#f87171':'#4ade80'):'#fff';c.font='bold 18px Montserrat,sans-serif';c.fillText(v,x,396)});
+const alt=P&&st==='fly'?altAt(P.pts,dist):0,bad=st==='end'&&P&&(P.crash||P.fall||P.m<1);c.textAlign='left';
+[['ALTITUDE',alt.toFixed(1)+'m',40],['DISTANCE',Math.min(dist,D).toFixed(1)+'m',160],['MULTIPLIER','×'+Math.min(mHud,250).toFixed(1),285]].forEach(([l,v,x],i)=>{c.fillStyle='#94a3b8';c.font='bold 11px Montserrat,sans-serif';c.fillText(l,x,375);c.fillStyle=i===2?(bad||mHud<1?'#f87171':'#4ade80'):'#fff';c.font='bold 18px Montserrat,sans-serif';c.fillText(v,x,396)});
 c.textAlign='center';if(st==='idle'){c.fillStyle='#e2e8f0';c.font='500 18px Montserrat,sans-serif';c.fillText('Set your wager and launch the plane',W/2,200)}
 c.restore()}
 /* rank speed scales the animation clock only (sub-stepped so physics stays smooth); the outcome P was rolled at launch and is never read here */

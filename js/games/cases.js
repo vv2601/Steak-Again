@@ -1,26 +1,29 @@
 Games.cases=(()=>{
+// v2.5: new 0x "X" outcome. Real odds (p): X 30 / Common 20 / Uncommon 27 / Rare 13 / Legendary 6 / Mythic 3 / Secret 1. The "Case Odds" list shows d: X 25 / Common 25 / Uncommon 27 / Rare 13 / Legendary 6 / Mythic 3 / Secret 1.
 // ---- Odds config: p = percent actually rolled (one decimal place max, must total 100); d = percent shown in the "Case Odds" list (display text only); fx = VFX colour ----
 const RAR = [
-  { k: 'Common',    c: '#a3a3a3', ic: 'img/case-common.png',    min: .25, max: 1,   p: 75,  d: 50 },
-  { k: 'Uncommon',  c: '#22c55e', ic: 'img/case-uncommon.png',  min: 1,   max: 3,   p: 17,  d: 27 },
-  { k: 'Rare',      c: '#4f6bff', ic: 'img/case-rare.png',      min: 3,   max: 15,  p: 6,   d: 13 },
-  { k: 'Legendary', c: '#fbbf24', ic: 'img/case-legendary.png', min: 15,  max: 25,  p: 1.5, d: 6,  fx: '#fbbf24' },
-  { k: 'Mythic',    c: '#ef4444', ic: 'img/case-mythic.png',    min: 25,  max: 50,  p: .4,  d: 3,  fx: '#ef4444' },
-  { k: 'Secret',    c: '#05070a', b: '#6b7280', ic: 'img/case-secret.png', min: 50, max: 100, p: .1, d: 1, fx: '#e5e7eb' }
+  { k: 'X',         c: '#ef4444', b: '#ef4444', min: 0, max: 0,          p: 30,  d: 25, zero: 1 },
+  { k: 'Common',    c: '#a3a3a3', ic: 'img/case-common.png',    min: .25, max: 1,   p: 20,  d: 25 },
+  { k: 'Uncommon',  c: '#22c55e', ic: 'img/case-uncommon.png',  min: 1,   max: 3,   p: 27,  d: 27 },
+  { k: 'Rare',      c: '#4f6bff', ic: 'img/case-rare.png',      min: 3,   max: 15,  p: 13,  d: 13 },
+  { k: 'Legendary', c: '#fbbf24', ic: 'img/case-legendary.png', min: 15,  max: 25,  p: 6,   d: 6,  fx: '#fbbf24' },
+  { k: 'Mythic',    c: '#ef4444', ic: 'img/case-mythic.png',    min: 25,  max: 50,  p: 3,   d: 3,  fx: '#ef4444' },
+  { k: 'Secret',    c: '#05070a', b: '#6b7280', ic: 'img/case-secret.png', min: 50, max: 100, p: 1, d: 1, fx: '#e5e7eb' }
 ];const LIFE=['Legendary','Mythic','Secret'],LOCK_BEAT=3000;
 /* Presentation-only events. They are decided AFTER the real result is rolled and never change it, the payout, or the odds:
    TEASE_P (v2.3: 60%, was 80%) = chance a Legendary+ neighbour of a Common/Uncommon result triggers the near-miss rollback.
    For a Rare+ result: FAKE_P = chance it is shown as a "fake common" that flips to the real reward; else TIP_P = chance the strip overshoots onto a Common and rolls back to it. */
-const TEASE_P=.6,FAKE_P=.12,TIP_P=.15,MIN_REAL=2,FLIP_MS=900;
+const TEASE_P=.6,FAKE_P=.12,TIP_P=.15,MIN_REAL=3,FLIP_MS=900,XDOWN_P=.06,XUP_P=.04;
+/* v2.5 X flips (presentation only, rare): XDOWN_P = chance a real X is first shown as a Common/Uncommon/Rare tile that flips over to the X; XUP_P = chance a non-X result is first shown as an X that flips over to its real (better) rarity. */
 const spinSpeed=rk=>{for(const[r,s]of CFG.SPIN_SPEED)if(rk>=r)return s;return 1};
 RAR.forEach(r=>r.w=Math.round(r.p*10));const TOT=RAR.reduce((a,r)=>a+r.w,0);
 const DUR=6500,TEASE=2400,TEASE_HOLD=.62,EA=.1,EC=.35,EL=1-EC,EV=1/(EA/2+(EC-EA)+EL/3);
 function ease(p){if(p<=0)return 0;if(p>=1)return 1;if(p<EA)return .5*EV*p*p/EA;const d1=.5*EV*EA;if(p<EC)return d1+EV*(p-EA);const q=(p-EC)/EL;return d1+EV*(EC-EA)+EV*EL/3*(1-Math.pow(1-q,3))}
 const easeIO=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
-if(TOT!==1000)console.error('Case odds must total 100');
+if(TOT!==1000||RAR.reduce((a,r)=>a+r.d,0)!==100)console.error('Case odds must total 100');
 const TW=104,STEP=114,N=60,WIN=48,REST=4;
 /* Dramatic near-miss: the result is a Common/Uncommon but a Legendary+ tile sits right next to it. Returns that neighbour's index (highest rarity wins), else -1. */
-function teaseIdx(arr,win,winner){if(winner.r.k!=='Common'&&winner.r.k!=='Uncommon')return -1;
+function teaseIdx(arr,win,winner){if(winner.r.k!=='X'&&winner.r.k!=='Common'&&winner.r.k!=='Uncommon')return -1;
 const c=[win-1,win+1].filter(i=>arr[i]&&arr[i].r.fx);if(!c.length)return -1;const rk=i=>RAR.findIndex(x=>x.k===arr[i].r.k);return c.sort((a,b)=>rk(b)-rk(a)||a-b)[0]}
 /* Strip position at time t (ms). Normal spin: eased move x0->xT. Tease / tip-over: eased move to xA (a Legendary+ tile, or the Common the strip overshoots onto), a slow crawl while sitting there,
    then a last-moment slide onto the real result (xT). xT may be left OR right of xA (rollback). */
@@ -29,10 +32,12 @@ const p=(t-m.dur)/m.tease,dir=Math.sign(m.xT-m.xA)||1,hd=m.hold||TEASE_HOLD,cr=M
 if(p<hd)return m.xA+dir*cr*(p/hd);const q=(p-hd)/(1-hd);return m.xA+dir*cr+(m.xT-m.xA-dir*cr)*easeIO(q)}
 const isReal=o=>RAR.findIndex(x=>x.k===o.r.k)>=MIN_REAL;
 /* Decide the presentation of an already-rolled result. dev (dev builds only) can force one event; production never passes it. */
-function present(o,rnd,dev){if(!isReal(o))return{fake:false,tip:false};
+function present(o,rnd,dev){if(o.r.k==='X'){if(rnd()<XDOWN_P){const L=['Common','Uncommon','Rare'];return{fake:true,tip:false,look:L[Math.floor(rnd()*3)]}}return{fake:false,tip:false}}
+if(rnd()<XUP_P)return{fake:true,tip:false,look:'X'};
+if(!isReal(o))return{fake:false,tip:false};
 if(dev&&dev.fake)return{fake:true,tip:false};if(dev&&dev.tip)return{fake:false,tip:true};
 if(rnd()<FAKE_P)return{fake:true,tip:false};return{fake:false,tip:rnd()<TIP_P}}
-const api={title:'CASES',spinSpeed,teaseIdx,pos,present,WIN,STEP,FAKE_P,TIP_P,TEASE_P,mount(el){
+const api={title:'CASES',RAR,XDOWN_P,XUP_P,spinSpeed,teaseIdx,pos,present,WIN,STEP,FAKE_P,TIP_P,TEASE_P,mount(el){
 if(!document.getElementById('stk-cs')){const s=document.createElement('style');s.id='stk-cs';s.textContent=`
 .cs-odds{font-size:20px;line-height:1.5;text-align:center}.cs-odds h3{margin:6px 0;font-weight:400;font-size:26px;color:#a3a3a3}
 .cs-past{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px;min-height:30px;justify-content:flex-start}.cs-past b{font-size:13px;padding:4px 14px;border-radius:999px;background:var(--c);color:#fff;border:2px solid var(--b)}
@@ -70,14 +75,15 @@ let hb=0,arr=[],sel=REST,busy=false,rd=null,past=[],prev=null,tm=[],raf=0,mo=nul
 const rnd=()=>{try{return crypto.getRandomValues(new Uint32Array(1))[0]/4294967296}catch(e){return Math.random()}};
 function roll(){let r=Math.floor(rnd()*TOT),i=0;for(;i<RAR.length-1;i++){if(r<RAR[i].w)break;r-=RAR[i].w}const z=RAR[i];return{r:z,m:Math.min(z.max,Math.max(z.min,Math.round((z.min+rnd()*(z.max-z.min))*100)/100))}}
 const rollReal=()=>{let o;do{o=roll()}while(!isReal(o));return o};   // dev forcing only
-const commonLook=()=>{const z=RAR[0];return{r:z,m:Math.round((z.min+rnd()*(z.max-z.min))*100)/100}};
+const lookOf=k=>{const z=RAR.find(x=>x.k===k);return z.zero?{r:z,m:0}:{r:z,m:Math.round((z.min+rnd()*(z.max-z.min))*100)/100}},commonLook=()=>lookOf('Common');
+const XSVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5l15 15M19.5 4.5l-15 15" stroke="currentColor" stroke-width="4.6" stroke-linecap="round" fill="none"/></svg>',lbl=o=>o.r.zero?'X':o.m.toFixed(2)+'x';
 const tile = (o, i) =>
-  `<div class="ct${o.r.fx ? ' hi r-' + o.r.k : ''}" data-i="${i}" tabindex="0"
-       role="button" aria-label="${o.r.k} ${o.m.toFixed(2)}x"
+  `<div class="ct${o.r.fx ? ' hi r-' + o.r.k : o.r.zero ? ' r-X' : ''}" data-i="${i}" tabindex="0"
+       role="button" aria-label="${o.r.k} ${lbl(o)}"
        style="--c:${o.r.c};--b:${o.r.b || o.r.c};--fx:${o.r.fx || o.r.c}">
-     <i><img src="${o.r.ic}" alt=""></i>
-     <b>${o.m.toFixed(2)}x</b>
-   </div>`;const pill=o=>`<b style="--c:${o.r.c};--b:${o.r.b||o.r.c}">${o.m.toFixed(2)}x</b>`;
+     <i>${o.r.zero ? XSVG : `<img src="${o.r.ic}" alt="">`}</i>
+     <b>${lbl(o)}</b>
+   </div>`;const pill=o=>`<b style="--c:${o.r.c};--b:${o.r.b||o.r.c}">${lbl(o)}</b>`;
 function center(i){return wr.clientWidth/2-(i*STEP+TW/2)}
 /* winner = what the strip shows at WIN (a fake common when rd.fake); after = optional tile forced right after WIN (the Common a tip-over overshoots onto) */
 function build(winner,after){const a=Array.from({length:N},()=>roll());a[REST]=prev||a[REST];if(winner)a[WIN]=winner;if(after)a[WIN+1]=after;arr=a;sr.innerHTML=a.map((o,i)=>tile(o,i)).join('');sr.style.transition='none';sr.style.transform=`translate3d(${center(REST)}px,0,0)`;sel=-1;mark(REST);return a}
@@ -90,8 +96,8 @@ if(rd.fake){const t0=sr.children[WIN];t0.classList.add('fkflip');tm.push(setTime
 else conclude()}
 function conclude(){if(!busy||rd.finished)return;rd.finished=true;sr.children[WIN].classList.add('win');
 const pay=settleOnce(),pr=Math.round((pay-rd.bet)*100)/100,o=rd.o;life();burst(o);prev=o;past.unshift(o);past=past.slice(0,7);q('#pa').innerHTML=past.map(pill).join('');
-rs.innerHTML=`Wager: <b>$${App.f(rd.bet)}</b> • Multiplier: <b style="color:${o.r.k==='Secret'?'#fff':o.r.c}">${o.m.toFixed(2)}x (${o.r.k})</b> • Payout: <b style="color:${pr>=0?'#22c55e':'#ef4444'}">$${App.f(pay)}</b>`;
-App.toast(pr>=0?`${o.m.toFixed(2)}x: +$${App.f(pr)} profit`:`${o.m.toFixed(2)}x: lost $${App.f(-pr)}`);
+rs.innerHTML=`Wager: <b>$${App.f(rd.bet)}</b> • Multiplier: <b style="color:${o.r.k==='Secret'?'#fff':o.r.c}">${o.r.zero?'X (0x)':o.m.toFixed(2)+'x ('+o.r.k+')'}</b> • Payout: <b style="color:${pr>=0?'#22c55e':'#ef4444'}">$${App.f(pay)}</b>`;
+App.toast(pr>=0?`${lbl(o)}: +$${App.f(pr)} profit`:`${lbl(o)}: lost $${App.f(-pr)}`);
 busy=false;unlock();go.disabled=false;goTxt();br.classList.remove('dis');bi.disabled=false}
 function life(){q('#lf').innerHTML='<span>Lifetime spins:</span><span style="color:#e2e8f0">Total: <b>'+(Store.d.cs||0).toLocaleString('en-US')+'</b></span>'+LIFE.map(k=>{const r=RAR.find(x=>x.k===k);return `<span style="color:${r.fx}">${k}: <b>${Store.d.cc[k]||0}</b></span>`}).join('')}
 function burst(o){if(!o.r.fx)return;const n={Legendary:18,Mythic:28,Secret:40}[o.r.k],f=document.createElement('div');f.className='cs-burst';f.style.setProperty('--fx',o.r.fx);let h='<i class="cs-flash"></i><i class="cs-ring"></i>';
@@ -106,7 +112,7 @@ busy=true;clearInterval(hb);hb=setInterval(()=>{if(!Lock.beat('CASES'))Lock.acqu
 /* 1) the real result is rolled first (unchanged RNG). 2) only then is its presentation chosen. */
 const dev=api.dev;let o=roll(),pr;if(dev&&(dev.fake||dev.tip)){o=rollReal();pr=present(o,rnd,dev);if(pr.fake)dev.fake=0;else dev.tip=0}else pr=present(o,rnd);
 rd={bet,o,settled:false,finished:false,fake:pr.fake,tip:pr.tip};go.disabled=true;go.textContent='Opening…';br.classList.add('dis');bi.disabled=true;
-rs.innerHTML=`Wager placed: <b>$${App.f(bet)}</b>. Opening case…`;prev=arr[sel]||prev;build(rd.fake?commonLook():rd.o,rd.tip?commonLook():null);
+rs.innerHTML=`Wager placed: <b>$${App.f(bet)}</b>. Opening case…`;prev=arr[sel]||prev;build(rd.fake?lookOf(pr.look||'Common'):rd.o,rd.tip?commonLook():null);
 const spd=spinSpeed(Store.d.rk);let hi=rd.fake||rd.tip?-1:teaseIdx(arr,WIN,rd.o);if(hi>=0&&rnd()>=TEASE_P)hi=-1;
 const xT=center(WIN),dur=DUR/spd,tz=rd.tip?TEASE*(.8+rnd()*.5)/spd:hi<0?0:TEASE*(.7+rnd()*.7)/spd;   // tease length, hold point and crawl distance vary every spin
 mo={x0:center(REST),xA:rd.tip?center(WIN+1):hi<0?xT:center(hi),xT,dur,tease:tz,hold:.35+rnd()*.5,cap:4+rnd()*14};rd.total=dur+tz;if(hi>=0)wr.style.setProperty('--fx',arr[hi].r.fx);
